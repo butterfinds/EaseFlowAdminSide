@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EASEPrint Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hidden { display: none; }
+    #editModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    #editModal form {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 100%;
+    }
+    img { max-width: 100%; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 10px; text-align: left; }
+    button { padding: 5px 10px; margin: 2px; cursor: pointer; }
+    textarea { width: 100%; height: 40px; }
+    .approved { background-color: #d4f8d4; }
+    .rejected { background-color: #ffdada; }
+    .pending { background-color: #fff5d1; }
+    .filter-box { margin-bottom: 15px; }
+    select { padding: 5px; }
+    
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>EASEPrint</h2>
+    <ul>
+      <li onclick="showSection('home')">🏠 Dashboard</li>
+      <li onclick="showSection('products')">🛍 Products</li>
+      <li onclick="showSection('orders')">📦 Orders</li>
+      <li onclick="showSection('appointments')">📅 Appointments</li>
+      <li onclick="showSection('tracking')">🚚 Tracking</li>
+      <li onclick="showSection('transactions')">📄 Transactions</li>
+      <li onclick="showSection('analytics')">📈 Analytics</li>
+      <li onclick="showSection('chat')">💬 Chat</li>
+      <li onclick="showSection('settings')">⚙️ Settings</li>
+      
+
+    </ul>
+  </div>
+
+  <div class="main">
+    <div id="home">
+      <h1>Dashboard</h1>
+      <p>Overview of orders, sales, and top products.</p>
+
+      <div id="topSalesSection" class="hidden">
+  <h2>🏆 Top Sales</h2>
+  <ul id="topSalesList"></ul>
+
+<div id="topSalesChartSection">
+  <h2>🏆 Top Sales Pie Chart</h2>
+  <canvas id="topSalesChart" width="400" height="400"></canvas>
+</div>
+
+</div>
+
+    </div>
+
+    <div id="products" class="hidden">
+      <h1>Product Upload</h1>
+      <form id="productForm" enctype="multipart/form-data">
+        <input type="text" id="productName" placeholder="Product Name" required />
+        <input type="text" id="productPrice" placeholder="Price (e.g. 99.99)" required />
+        <input type="number" id="productStock" placeholder="Stock Quantity" required />
+        <input type="file" id="productImage" accept="image/*" required />
+        <textarea id="productDescription" placeholder="Description..." required></textarea>
+        <button type="submit">Upload Product</button>
+        <p id="uploadStatus"></p>
+      </form>
+
+      <h2>Uploaded Products</h2>
+      <table id="productTable" border="1">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+   <!-- ORDER DIV -->
+    <div id="orders" class="hidden">
+      <h1>Orders</h1>
+
+      <button class="refresh-btn" onclick="fetchOrders()">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+
+      <table id="ordersTable" border="1" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+        <thead>
+          <tr>
+  <th>ID</th>
+  <th>User</th>
+  <th>Phone</th>
+  <th>Address</th>
+  <th>Total</th>
+  <th>Items</th>
+  <th>Status</th>
+  <th>Date</th>
+  <th>Actions</th>
+</tr>
+
+        </thead>
+        <tbody>
+          <tr><td colspan="7">Loading orders...</td></tr>
+        </tbody>
+      </table>
+</div>
+
+    <div id="appointments" class="hidden"><h1>Appointments</h1>
+    
+   <h1>Custom Shirt Requests</h1>
+
+  <!-- Filter Dropdown -->
+  <div class="filter-box">
+    <label for="statusFilter">Show: </label>
+    <select id="statusFilter" onchange="fetchRequests()">
+      <option value="All">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </div>
+
+  <table id="requestsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Full Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Design</th>
+        <th>Size</th>
+        <th>Quantity</th>
+        <th>Notes</th>
+        <th>Status</th>
+        <th>Admin Note</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="requestsBody">
+      <tr><td colspan="11">Loading...</td></tr>
+    </tbody>
+  </table>
+
+
+<h2>Appointments Schedule</h2>
+<div class="controls">
+  <label>
+    Filter:
+    <select id="appointmentsStatusFilter">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </label>
+  <button id="appointmentsReloadBtn">Reload</button>
+</div>
+
+<table id="appointmentsTbl">
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Phone</th><th>Email</th>
+      <th>Date</th><th>Status</th><th>QR</th><th>PDF</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+    
+    </div>
+
+
+
+
+    <div id="tracking" class="hidden"><h1>Tracking</h1>
+    
+    
+    </div>
+
+
+ <div id="transactions" class="hidden"><h1>Record Manual Transaction</h1>
+  
+  <input id="item" placeholder="Item Name" />
+  <input id="price" placeholder="Unit Price" type="number" />
+  <input id="qty" placeholder="Quantity" type="number" />
+
+  <select id="orderStatus">
+    <option value="Pending">Pending</option>
+    <option value="Successful">Successful</option>
+  </select>
+
+  <select id="paymentStatus">
+    <option value="Pending">Pending</option>
+    <option value="Done">Done</option>
+  </select>
+
+  <button onclick="submitTransaction()">Submit</button>
+  <div id="response"></div>
+
+<h2>Transactions List</h2>
+<table border="1" style="width: 100%">
+  <thead>
+    <tr>
+      <th>Date</th> <!-- 🆕 -->
+      <th>Item Name</th>
+      <th>Unit Price</th>
+      <th>Quantity</th>
+      <th>Order Status</th>
+      <th>Payment Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="transactionsList"></tbody>
+</table>
+
+</div>
+
+<!-- Transaction Edit Modal -->
+<div id="transactionModal" class="modal hidden" style="
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: white; padding: 20px; border: 1px solid #ccc; z-index: 1000;
+">
+  <h3>Edit Transaction</h3>
+  <input id="editTransactionId" type="hidden" />
+  <input id="editItem" placeholder="Item Name" />
+  <input id="editPrice" placeholder="Unit Price" type="number" />
+  <input id="editQty" placeholder="Quantity" type="number" />
+  <select id="editOrderStatus">
+    <option value="Pending">Pending</option>
+    <option value="Successful">Successful</option>
+  </select>
+  <select id="editPaymentStatus">
+    <option value="Pending">Pending</option>
+    <option value="Done">Done</option>
+  </select>
+  <br><br>
+  <button onclick="saveEdit()">Save</button>
+  <button onclick="closeModal()">Cancel</button>
+</div>
+
+
+
+    <div id="analytics" class="hidden">
+      <h1>Analytics</h1>
+      
+    <div>
+  <label for="salesPeriod">Select Period:</label>
+  <select id="salesPeriod">
+    <option value="day">Daily</option>
+    <option value="week">Weekly</option>
+    <option value="month" selected>Monthly</option>
+    <option value="year">Yearly</option>
+  </select>
+</div>
+
+<div id="salesTrendsSection">
+  <h2>📊 Sales Trends</h2>
+  <canvas id="salesLineChart" width="600" height="300"></canvas>
+  <canvas id="salesBarChart" width="600" height="300" style="margin-top:20px;"></canvas>
+</div>
+
+    
+    </div>
+    
+
+
+  <div id="chat" class="hidden">
+  <h1>Customer Support Chat</h1>
+
+  <label for="customerSelect">Choose a customer:</label>
+  <select id="customerSelect" onchange="handleCustomerChange()">
+    <option disabled selected value="">-- Select a Customer --</option>
+  </select>
+
+  <div id="chatBox"></div>
+
+  <input id="chatInput" type="text" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send Message</button>
+</div>
+
+    <div id="settings" class="hidden">
+      <h1>Account Settings</h1>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal">
+    <form id="editForm" enctype="multipart/form-data">
+      <h3>Edit Product</h3>
+      <input type="hidden" id="editProductId" />
+      <input type="text" id="editName" placeholder="Product Name" required />
+      <input type="number" id="editprice" placeholder="Price (e.g. 99.99)" step="0.01" min="0" required />
+      <input type="number" id="editStock" placeholder="Stock" required />
+      <textarea id="editDescription" placeholder="Description" required></textarea>
+      <input type="file" id="editImage" accept="image/*" />
+      <button type="submit">Save</button>
+      <button type="button" onclick="closeEditModal()">Cancel</button>
+    </form>
+  </div>
+
+
+
+
+  <script>
+    const token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = 'index.html';
+
+    function showSection(id) {
+      document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'products') loadProducts();
+      if (id === 'transactions') fetchTransactions();
+    }
+
+    function logout() {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminEmail');
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('name', document.getElementById('productName').value);
+      formData.append('price', document.getElementById('productPrice').value);
+      formData.append('stock', document.getElementById('productStock').value);
+      formData.append('description', document.getElementById('productDescription').value);
+      formData.append('image', document.getElementById('productImage').files[0]);
+
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || 'Upload failed');
+
+        document.getElementById('uploadStatus').innerText = 'Uploaded!';
+      e.target.reset();
+      loadProducts();
+      } catch (err) {
+        console.error('Upload error:', err);
+        document.getElementById('uploadStatus').innerText = 'Upload failed: ' + err.message;
+      }
+    });
+
+    async function loadProducts() {
+      const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const products = await res.json();
+      const tbody = document.querySelector('#productTable tbody');
+      tbody.innerHTML = '';
+      products.forEach(p => {
+              const row = `
+        <tr>
+          <td><img src="http://127.0.0.1:8000/storage/${p.image}" width="50" /></td>
+          <td>${p.name}</td>
+          <td>${p.price}</td>
+          <td>${p.stock}</td>
+          <td>${p.description}</td>
+          <td>
+            <button class="edit-btn" onclick="editProduct(${p.id})">✏️ Edit</button>
+            <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑️ Delete</button>
+          </td>
+        </tr>
+      `;
+
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    function editProduct(id) {
+      fetch('http://127.0.0.1:8000/api/admin/products', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(products => {
+        const p = products.find(prod => prod.id === id);
+        if (!p) return alert('Product not found.');
+        document.getElementById('editProductId').value = p.id;
+        document.getElementById('editName').value = p.name;
+        document.getElementById('editprice').value = p.price;
+        document.getElementById('editStock').value = p.stock;
+        document.getElementById('editDescription').value = p.description;
+        document.getElementById('editModal').style.display = 'flex';
+      });
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+document.getElementById('editForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id = document.getElementById('editProductId').value;
+  const formData = new FormData();
+  formData.append('name', document.getElementById('editName').value);
+  formData.append('price', document.getElementById('editprice').value);
+  formData.append('stock', document.getElementById('editStock').value);
+  formData.append('description', document.getElementById('editDescription').value);
+
+  const newImage = document.getElementById('editImage').files[0];
+  if (newImage) {
+    formData.append('image', newImage);
+  }
+  formData.append('_method', 'PUT');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.message || 'Failed to update product');
+    }
+
+    closeEditModal();
+    loadProducts();
+    alert('Product updated successfully!');
+  } catch (err) {
+    console.error('Update error:', err);
+    alert('Error updating product: ' + err.message);
+  }
+});
+
+
+async function deleteProduct(id) {
+  if (!confirm('Are you sure you want to delete this product?')) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const result = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(result.message || 'Delete failed');
+    }
+    
+    // Reset the product form
+    document.getElementById('productForm').reset();
+    document.getElementById('uploadStatus').innerText = 'Product deleted successfully';
+    document.getElementById('uploadStatus').style.color = 'green';
+    
+    // Reload products after a short delay
+    loadProducts();
+  } catch (err) {
+    console.error('Delete error:', err);
+    document.getElementById('uploadStatus').innerText = 'Error: ' + err.message;
+    document.getElementById('uploadStatus').style.color = 'red';
+  }
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadCustomers();
+  setInterval(fetchMessages, 3000); // auto refresh
+  setInterval(checkAllCustomersForNewMessages, 3000);
+});
+const hasNewMessageMap = {};
+
+let selectedCustomerId = null;
+
+async function loadCustomers() {
+  const res = await fetch('http://127.0.0.1:8000/api/customers');
+  const customers = await res.json();
+  const select = document.getElementById('customerSelect');
+
+  select.innerHTML = '<option disabled selected value="">-- Select a Customer --</option>';
+
+  customers.forEach(c => {
+    const option = document.createElement('option');
+    option.value = c.id;
+    option.textContent = c.name;
+
+    // Initialize lastReadMessageId for new customers
+    if (!(c.id in lastReadMessageIdPerCustomer)) {
+      lastReadMessageIdPerCustomer[c.id] = 0;
+    }
+
+    select.appendChild(option);
+  });
+
+  updateCustomerUnreadIndicators();
+}
+
+function updateCustomerUnreadIndicators() {
+  const select = document.getElementById('customerSelect');
+  for (let i = 0; i < select.options.length; i++) {
+    const option = select.options[i];
+    if (!option.value) continue; // skip placeholder
+
+    // Check if this customer has unread messages
+    hasUnread(option.value).then(unread => {
+      if (unread) {
+        // Add red dot or badge in option text
+        if (!option.textContent.includes(' 🔴')) {
+          option.textContent += ' 🔴';
+        }
+      } else {
+        // Remove unread dot if present
+        option.textContent = option.textContent.replace(' 🔴', '');
+      }
+    });
+  }
+}
+
+async function hasUnread(customerId) {
+  if (hasNewMessageMap[customerId]) {
+    return true;
+  }
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/messages/${customerId}`);
+    const messages = await res.json();
+    if (messages.length === 0) return false;
+
+    const lastReadId = lastReadMessageIdPerCustomer[customerId] || 0;
+    const latestMsgId = messages[messages.length - 1].id;
+    return latestMsgId > lastReadId;
+  } catch {
+    return false;
+  }
+}
+
+
+function handleCustomerChange() {
+  selectedCustomerId = document.getElementById('customerSelect').value;
+  fetchMessages();
+
+  // When switching customer, mark messages as read by updating lastReadMessageId
+  markMessagesRead(selectedCustomerId);
+  updateCustomerUnreadIndicators();
+}
+
+function formatTimestamp(dateString) {
+  const date = new Date(dateString);
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const day = date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  return `${day} at ${time}`;
+}
+
+let lastReadMessageIdPerCustomer = JSON.parse(localStorage.getItem('lastReadIds')) || {};
+let lastFetchedMessageId = 0;
+
+async function fetchMessages() {
+  if (!selectedCustomerId) return;
+
+  const res = await fetch(`http://127.0.0.1:8000/api/messages/${selectedCustomerId}`);
+  const messages = await res.json();
+  const chatBox = document.getElementById('chatBox');
+
+  const isAtBottom = chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 50;
+
+  // Detect new messages
+  if (messages.length > 0) {
+    const latestMsgId = messages[messages.length - 1].id;
+    if (latestMsgId > lastFetchedMessageId) {
+      if (selectedCustomerId !== null && latestMsgId !== lastFetchedMessageId) {
+        notifyNewMessage(messages[messages.length - 1]);
+      }
+      lastFetchedMessageId = latestMsgId;
+    }
+  }
+
+  chatBox.innerHTML = '';
+
+  messages.forEach(msg => {
+    const isSent = msg.is_admin;
+    const timestamp = formatTimestamp(msg.created_at);
+
+    const lastReadId = lastReadMessageIdPerCustomer[selectedCustomerId] || 0;
+    const isUnread = msg.id > lastReadId;
+
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('message-wrapper', isSent ? 'sent-wrapper' : 'received-wrapper');
+
+    wrapper.innerHTML = `
+      <div class="timestamp-only">${timestamp}</div>
+      <div class="message ${isSent ? 'sent' : 'received'} ${isUnread ? 'unread' : 'read'}">
+        <strong>${msg.is_admin ? 'Admin' : msg.sender.name}:</strong> ${msg.message}
+        ${isUnread ? '<span class="unread-indicator" title="Unread">•</span>' : ''}
+      </div>
+    `;
+
+    chatBox.appendChild(wrapper);
+  });
+
+  // Mark messages as read and persist to localStorage
+  if (messages.length > 0) {
+    const lastMsgId = messages[messages.length - 1].id;
+    lastReadMessageIdPerCustomer[selectedCustomerId] = lastMsgId;
+    localStorage.setItem('lastReadIds', JSON.stringify(lastReadMessageIdPerCustomer));
+  }
+
+  if (isAtBottom) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+}
+
+
+
+function markMessagesRead(customerId) {
+  fetch(`http://127.0.0.1:8000/api/messages/${customerId}`)
+    .then(res => res.json())
+    .then(messages => {
+      if (messages.length === 0) return;
+      lastReadMessageIdPerCustomer[customerId] = messages[messages.length - 1].id;
+
+      hasNewMessageMap[customerId] = false; // ✅ clear red dot flag
+
+      updateCustomerUnreadIndicators();
+    });
+}
+
+
+async function sendMessage() {
+  const msg = document.getElementById('chatInput').value;
+  if (!selectedCustomerId || !msg.trim()) return;
+
+  await fetch('http://127.0.0.1:8000/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sender_id: 0,
+      receiver_id: selectedCustomerId,
+      message: msg,
+      is_admin: true
+    })
+  });
+
+  document.getElementById('chatInput').value = '';
+  fetchMessages();
+}
+
+// Desktop notification for new messages
+function notifyNewMessage(msg) {
+  console.log("🔔 Notification triggered:", msg);
+  if (document.hidden && Notification.permission === 'granted') {
+    const notification = new Notification(`New message from ${msg.is_admin ? 'Admin' : msg.sender.name}`, {
+      body: msg.message,
+      icon: 'chat-icon.png', // optional: path to your icon
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      // Optionally, switch to customer chat if you have UI for that
+    };
+  }
+}
+
+
+
+
+let lastFetchedMessageIdMap = {}; // per customer
+
+async function checkAllCustomersForNewMessages() {
+  const res = await fetch('http://127.0.0.1:8000/api/customers');
+  const customers = await res.json();
+
+  for (const customer of customers) {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/messages/${customer.id}`);
+      const messages = await res.json();
+
+      if (messages.length === 0) continue;
+
+      const latestMsg = messages[messages.length - 1];
+
+      // Only notify if the message is NOT from admin
+      if (!latestMsg.is_admin) {
+        const lastFetchedId = lastFetchedMessageIdMap[customer.id] || 0;
+
+        if (latestMsg.id > lastFetchedId) {
+          lastFetchedMessageIdMap[customer.id] = latestMsg.id;
+
+          hasNewMessageMap[customer.id] = true;
+          updateCustomerUnreadIndicators(); // ✅ Add this
+
+
+          notifyNewMessage(latestMsg);
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to check messages for customer ${customer.id}:`, err);
+    }
+  }
+}
+
+// Request notification permission once on page load
+if ('Notification' in window && Notification.permission !== 'granted') {
+  Notification.requestPermission();
+}
+
+
+
+
+
+
+let selectedTransactionId = null;
+
+  // 🟢 Load Transactions on Page Load
+ fetchTransactions();
+
+async function fetchTransactions() {
+  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const transactions = await res.json();
+  const list = document.getElementById('transactionsList');
+  list.innerHTML = '';
+
+  transactions.forEach(tx => {
+      const date = new Date(tx.created_at).toLocaleString('en-PH', {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', hour12: true
+    });
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${date}</td> <!-- 🆕 Display formatted date -->
+      <td>${tx.item_name}</td>
+      <td>${tx.unit_price}</td>
+      <td>${tx.quantity}</td>
+      <td>${tx.order_status}</td>
+      <td>${tx.payment_status}</td>
+      <td>
+        <button onclick="openEditModal(${tx.id}, '${tx.item_name}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')">✏️ Edit</button>
+        <button onclick="deleteTransaction(${tx.id})">🗑️ Delete</button>
+      </td>
+    `;
+    list.appendChild(row);
+  });
+
+  
+  
+}
+
+// New Transaction Submit
+
+async function submitTransaction() {
+  const item = document.getElementById("item").value;
+  const price = parseFloat(document.getElementById("price").value);
+  const qty = parseInt(document.getElementById("qty").value);
+  const orderStatus = document.getElementById("orderStatus").value;
+  const paymentStatus = document.getElementById("paymentStatus").value;
+
+  const responseDiv = document.getElementById("response");
+
+  try {
+      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
+
+    const data = await res.json();
+    responseDiv.innerText = data.message || 'Transaction added!';
+    responseDiv.style.color = "green";
+
+    // Reset inputs
+    document.getElementById("item").value = '';
+    document.getElementById("price").value = '';
+    document.getElementById("qty").value = '';
+    document.getElementById("orderStatus").value = 'Pending';
+    document.getElementById("paymentStatus").value = 'Pending';
+
+    fetchTransactions();
+  } catch (err) {
+    responseDiv.innerText = 'Error saving transaction.';
+    responseDiv.style.color = "red";
+    console.error(err);
+  }
+ 
+
+}
+
+
+
+// Open Edit Modal
+function openEditModal(id, item_name, unit_price, quantity, order_status, payment_status) {
+  selectedTransactionId = id;
+  document.getElementById('editTransactionId').value = id;
+  document.getElementById('editItem').value = item_name;
+  document.getElementById('editPrice').value = unit_price;
+  document.getElementById('editQty').value = quantity;
+  document.getElementById('editOrderStatus').value = order_status;
+  document.getElementById('editPaymentStatus').value = payment_status;
+  document.getElementById('transactionModal').classList.remove('hidden');
+}
+
+// Close Edit Modal
+function closeModal() {
+  document.getElementById('transactionModal').classList.add('hidden');
+}
+
+// Save Edit
+async function saveEdit() {
+  const id = document.getElementById('editTransactionId').value;
+  const item = document.getElementById('editItem').value;
+  const price = parseFloat(document.getElementById('editPrice').value);
+  const qty = parseInt(document.getElementById('editQty').value);
+  const orderStatus = document.getElementById('editOrderStatus').value;
+  const paymentStatus = document.getElementById('editPaymentStatus').value;
+
+  try {
+    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
+
+    closeModal();
+    fetchTransactions();
+  } catch (err) {
+    console.error("Update failed:", err);
+  }
+}
+
+async function deleteTransaction(id) {
+  if (!confirm("Are you sure you want to delete this transaction?")) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to delete transaction');
+    }
+
+    // Reset the input fields manually after a successful deletion
+    document.getElementById("item").value = '';
+    document.getElementById("price").value = '';
+    document.getElementById("qty").value = '';
+    document.getElementById("orderStatus").value = 'Pending';
+    document.getElementById("paymentStatus").value = 'Pending';
+    document.getElementById("response").innerText = 'Transaction deleted successfully!';
+    document.getElementById("response").style.color = 'green';
+    
+    // Refresh the list
+    fetchTransactions();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Error deleting transaction: " + err.message);
+  }
+}
+
+
+
+async function fetchTopSales() {
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/top-sales');
+    const data = await res.json();
+
+    const section = document.getElementById('topSalesSection');
+    const list = document.getElementById('topSalesList');
+    list.innerHTML = ''; 
+
+    if (data.length > 0) {
+      section.classList.remove('hidden'); // 👈 Show the section if there's data
+    } else {
+      section.classList.add('hidden'); // 👈 Hide if no data
+    }
+
+    data.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${index + 1}. ${item.item_name} — ${item.total_quantity} pcs`;
+      list.appendChild(li);
+    });
+  } catch (err) {
+    console.error('Error fetching top sales:', err);
+  }
+}
+
+
+setInterval(() => {
+  fetchTopSales();
+}, 1000);
+
+
+let topSalesChartInstance = null;
+
+async function renderTopSalesPieChart() {
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/top-sales');
+    const data = await res.json();
+
+    const labels = data.map(item => item.item_name);
+    const quantities = data.map(item => item.total_quantity);
+
+    const ctx = document.getElementById('topSalesChart').getContext('2d');
+
+    // Destroy old chart if it exists
+    if (topSalesChartInstance) {
+      topSalesChartInstance.destroy();
+    }
+
+    topSalesChartInstance = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Top Sales',
+          data: quantities,
+          backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56',
+            '#4BC0C0', '#9966FF', '#FF9F40'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          title: {
+            display: true,
+            text: 'Top Selling Products'
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Error rendering Top Sales Pie Chart:', err);
+  }
+}
+
+// Auto-refresh every 5 seconds
+setInterval(renderTopSalesPieChart, 5000);
+
+// Load once on page load
+document.addEventListener('DOMContentLoaded', renderTopSalesPieChart);
+
+//chartttsss
+
+let salesLineChartInstance = null;
+let salesBarChartInstance = null;
+
+async function renderSalesTrendsCharts() {
+  const period = document.getElementById('salesPeriod').value;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/sales-trends?period=${period}`);
+    const data = await res.json();
+
+    const labels = data.map(entry => entry.period);
+    const sales = data.map(entry => parseFloat(entry.total_sales));
+
+    // ===== Line Chart =====
+    const ctxLine = document.getElementById('salesLineChart').getContext('2d');
+    if (salesLineChartInstance) salesLineChartInstance.destroy();
+    salesLineChartInstance = new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: `Sales (${period})`,
+          data: sales,
+          borderColor: '#36A2EB',
+          backgroundColor: 'rgba(54,162,235,0.2)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // ===== Bar Chart =====
+    const ctxBar = document.getElementById('salesBarChart').getContext('2d');
+    if (salesBarChartInstance) salesBarChartInstance.destroy();
+    salesBarChartInstance = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: `Sales (${period})`,
+          data: sales,
+          backgroundColor: '#FF6384'
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+  } catch (err) {
+    console.error('Error rendering sales trends charts:', err);
+  }
+}
+
+// Refresh when dropdown changes
+document.getElementById('salesPeriod').addEventListener('change', renderSalesTrendsCharts);
+
+// Auto-refresh every 10 seconds
+setInterval(renderSalesTrendsCharts, 10000);
+
+// Initial load
+document.addEventListener('DOMContentLoaded', renderSalesTrendsCharts);
+
+
+
+  const API_URL = "http://localhost:8000/api/custom-shirts"; // Laravel API
+
+    async function fetchRequests() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const tbody = document.getElementById("requestsBody");
+        tbody.innerHTML = "";
+
+        const filterValue = document.getElementById("statusFilter").value;
+
+        const filteredData = filterValue === "All"
+          ? data
+          : data.filter(req => req.status === filterValue);
+
+        if (filteredData.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="11">No ${filterValue} requests found.</td></tr>`;
+          return;
+        }
+
+        filteredData.forEach(req => {
+          const row = document.createElement("tr");
+          row.className = req.status.toLowerCase();
+
+          row.innerHTML = `
+            <td>${req.id}</td>
+            <td>${req.full_name}</td>
+            <td>${req.phone}</td>
+            <td>${req.email}</td>
+            <td>${req.design ? `<a href="http://localhost:8000/storage/${req.design}" target="_blank">View</a>` : 'No Design'}</td>
+            <td>${req.size}</td>
+            <td>${req.quantity}</td>
+            <td>${req.notes || ''}</td>
+            <td>${req.status}</td>
+            <td><textarea id="note-${req.id}">${req.admin_note || ''}</textarea></td>
+            <td>
+              ${req.status === "Pending" ? `
+                <button onclick="approveRequest(${req.id})">Approve</button>
+                <button onclick="rejectRequest(${req.id})">Reject</button>
+              ` : '—'}
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Error fetching requests:", err);
+      }
+    }
+
+    async function approveRequest(id) {
+      const note = document.getElementById(`note-${id}`).value;
+      await fetch(`${API_URL}/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_note: note })
+      });
+      fetchRequests();
+    }
+
+    async function rejectRequest(id) {
+      const note = document.getElementById(`note-${id}`).value;
+      await fetch(`${API_URL}/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_note: note })
+      });
+      fetchRequests();
+    }
+
+    fetchRequests();
+    
+
+
+
+
+  const API_BASE = 'http://localhost:8000/api';
+
+const appointmentsTbody = document.querySelector('#appointmentsTbl tbody');
+const appointmentsStatusFilter = document.getElementById('appointmentsStatusFilter');
+
+function originOf(url) { 
+  try { return new URL(url).origin; } 
+  catch { return ''; } 
+}
+
+function fileUrl(path) { 
+  return `${originOf(API_BASE)}/storage/${path}`; 
+}
+
+async function loadAppointments() {
+  const query = appointmentsStatusFilter.value ? `?status=${appointmentsStatusFilter.value}` : '';
+  const res = await fetch(`${API_BASE}/appointments${query}`);
+  const json = await res.json();
+  const items = json.data || json;
+  appointmentsTbody.innerHTML = '';
+
+  items.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${a.id}</td>
+      <td>${a.full_name}</td>
+      <td>${a.phone}</td>
+      <td>${a.email}</td>
+      <td>${a.schedule_date}</td>
+      <td><span class="badge ${a.status}">${a.status}</span></td>
+      <td>${a.qr_code_path ? `<a href="${fileUrl(a.qr_code_path)}" target="_blank">QR</a>` : ''}</td>
+      <td>${a.pdf_path ? `<a href="${fileUrl(a.pdf_path)}" target="_blank">PDF</a>` : ''}</td>
+      <td>
+        <button onclick="approveAppointment(${a.id})" ${a.status!=='pending' ? 'disabled' : ''}>Approve</button>
+        <button onclick="rejectAppointment(${a.id})" ${a.status!=='pending' ? 'disabled' : ''}>Reject</button>
+      </td>
+    `;
+    appointmentsTbody.appendChild(tr);
+  });
+}
+
+async function approveAppointment(id) {
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/appointments/${id}/approve`, {
+      method: 'PUT',   // ✅ match Laravel route
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Server error:", errorData);
+      alert(`Failed: ${errorData.message || 'Something went wrong.'}`);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("✅ Appointment approved:", data);
+
+    alert(`✅ ${data.message}\n📄 PDF: ${data.pdf_url}\n🔗 QR: ${data.qr_url}`);
+
+    // reload table after approve
+    loadAppointments();
+
+  } catch (err) {
+    console.error("Request failed:", err);
+    alert("❌ Could not connect to server. Please try again.");
+  }
+}
+
+async function rejectAppointment(id) {
+  if (!confirm('Reject this appointment?')) return;
+  const res = await fetch(`${API_BASE}/appointments/${id}/reject`, { method: 'PUT' });
+  let msg = 'Rejected.';
+  if (!res.ok) {
+    const j = await res.json().catch(()=>({message:'Failed'}));
+    msg = 'Error: ' + (j.message || res.status);
+  }
+  alert(msg);
+  loadAppointments();
+}
+
+
+// Placing orders // orders
+async function fetchOrders() {
+  const ordersTableBody = document.querySelector('#ordersTable tbody');
+  ordersTableBody.innerHTML = '<tr><td colspan="7">Loading orders...</td></tr>';
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/admin/orders');
+    const data = await response.json();
+    console.log("Fetched orders:", data);
+
+    if (data.length === 0) {
+      ordersTableBody.innerHTML = '<tr><td colspan="7">No orders found.</td></tr>';
+      return;
+    }
+
+    ordersTableBody.innerHTML = '';
+    data.forEach(order => {
+      // Status colors
+      let statusColor;
+      switch (order.status) {
+        case 'Approved': statusColor = 'green'; break;
+        case 'Rejected': statusColor = 'red'; break;
+        default: statusColor = 'orange'; // Pending
+      }
+
+      // Format created_at
+      const createdAt = new Date(order.created_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Format items
+      const items = order.items.map(i => `${i.product.name} x${i.quantity}`).join('<br>');
+
+      // Actions
+      let actions = '';
+      const normalizedStatus = (order.status || '').toLowerCase();
+
+      if (normalizedStatus === 'pending') {
+        actions += `
+          <button onclick="updateOrderStatus(${order.id}, 'Approved')" 
+            class="order-action-btn approve">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button onclick="updateOrderStatus(${order.id}, 'Rejected')" 
+            class="order-action-btn reject">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        `;
+      } else if (normalizedStatus === 'approved' || normalizedStatus === 'rejected') {
+          const statusClass = normalizedStatus === 'approved' ? 'approved' : 'rejected';
+          actions += `
+            <select onchange="handleEditStatus(${order.id}, this.value)" 
+              class="order-status-dropdown ${statusClass}">
+              <option value="">✏ Edit Status</option>
+              <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>
+                ✔ Approved
+              </option>
+              <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>
+                ✖ Rejected
+              </option>
+            </select>
+          `;
+      }
+
+      // --- ADD DELETE BUTTON ---
+      actions += `
+        <button onclick="deleteOrder(${order.id})" 
+          class="order-action-btn delete">
+          <i class="fas fa-trash"></i> Delete
+        </button>
+      `;
+
+      // Build row
+      const row = `
+        <tr>
+          <td>${order.id}</td>
+          <td>${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
+          <td>${order.delivery_phone ?? 'N/A'}</td>
+          <td>${order.delivery_address ?? 'N/A'}</td>
+          <td>${order.total}</td>
+          <td>${items}</td>
+          <td><span style="color: ${statusColor}; font-weight: bold;">${order.status}</span></td>
+          <td>${createdAt}</td>
+          <td>${actions}</td>
+        </tr>
+      `;
+      ordersTableBody.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    ordersTableBody.innerHTML = '<tr><td colspan="7">Error loading orders.</td></tr>';
+  }
+}
+
+// Update order status
+function showToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
+
+  document.body.appendChild(toast);
+
+  // trigger animation
+  setTimeout(() => toast.classList.add("show"), 100);
+
+  // remove after 3s
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+async function updateOrderStatus(orderId, status) {
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+
+    if (response.ok) {
+      const data = await response.json(); // Get updated order from API
+      const order = data.order;
+
+      showToast(`Order #${orderId} marked as ${status}`, "success");
+
+      // ✅ Send SMS via Electron safely
+      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order #${orderId} has been ${status}.`;
+      if (order.delivery_phone) {
+        try {
+          window.electronAPI.sendSMS(order.delivery_phone, message);
+          console.log(`SMS sent to ${order.delivery_phone}`);
+        } catch (smsError) {
+          console.error('Failed to send SMS:', smsError);
+        }
+      } else {
+        console.warn('No phone number found for this order.');
+      }
+
+      fetchOrders(); // reload table
+    } else {
+      console.error("Failed to update order status");
+      showToast("Error updating order status", "error");
+    }
+  } catch (error) {
+    if (error.response) {
+      console.error("API response error:", error.response);
+    } else if (error.request) {
+      console.error("No response from API:", error.request);
+    } else {
+      console.error("Error in request setup:", error.message);
+    }
+    showToast("Something went wrong while updating status.", "error");
+  }
+}
+
+// Handle edit dropdown
+function handleEditStatus(orderId, newStatus) {
+  if (!newStatus) return; // ignore placeholder
+  updateOrderStatus(orderId, newStatus);
+}
+
+// --- DELETE ORDER FUNCTION ---
+async function deleteOrder(orderId) {
+  if (!confirm(`Are you sure you want to delete Order #${orderId}?`)) return;
+
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      showToast(`Order #${orderId} has been deleted`, "success");
+      fetchOrders(); // reload table
+    } else {
+      console.error("Failed to delete order");
+      showToast("Error deleting order", "error");
+    }
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    showToast("Something went wrong while deleting the order", "error");
+  }
+}
+
+// Auto-load on page/app start
+document.addEventListener('DOMContentLoaded', () => {
+  fetchOrders();
+});
+
+
+
+
+document.getElementById('appointmentsReloadBtn').addEventListener('click', loadAppointments);
+appointmentsStatusFilter.addEventListener('change', loadAppointments);
+
+loadAppointments();
+
+
+  </script>
+</body>
+</html>

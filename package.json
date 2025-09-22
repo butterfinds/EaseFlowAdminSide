@@ -1,0 +1,27 @@
+{
+  "name": "electron-admin-app",
+  "version": "1.0.0",
+  "description": "Admin desktop app for Laravel website",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "chart.js": "^4.5.0",
+    "cors": "^2.8.5",
+    "electron-store": "^8.2.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.1",
+    "mysql2": "^3.14.1",
+    "twilio": "^5.9.0"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

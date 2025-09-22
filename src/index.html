@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EASEPrint Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+   <style>
+    :root {
+      --primary: #FF4D79;
+      --primary-dark: #B2183A;
+      --primary-light: #FFE6EB;
+      --secondary: #FFFFFF;
+      --secondary-light: #F8F9FA;
+      --accent: #FF4D79;
+      --text: #343A40;
+      --text-muted: #6C757D;
+      --border: #E9ECEF;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #FFFFFF;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--text);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Animated background elements */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-light) 0%, rgba(255,255,255,0) 70%);
+      z-index: -1;
+      animation: float 15s infinite ease-in-out;
+      opacity: 0.6;
+    }
+    
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+    
+    .shape-2 {
+      width: 500px;
+      height: 500px;
+      bottom: -200px;
+      right: -200px;
+      animation-delay: 2s;
+    }
+    
+    .shape-3 {
+      width: 200px;
+      height: 200px;
+      top: 40%;
+      right: 20%;
+      animation-delay: 4s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(20px, 20px); }
+    }
+    
+    /* Login container */
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+      width: 380px;
+      text-align: center;
+      transform: translateY(0);
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid var(--border);
+      z-index: 1;
+      backdrop-filter: blur(5px);
+    }
+    
+    .login-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Logo/header */
+    .logo {
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    .logo-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      box-shadow: 0 5px 15px rgba(178, 24, 58, 0.2);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .logo-icon svg {
+      width: 30px;
+      height: 30px;
+      fill: white;
+    }
+    
+    h2 {
+      margin-bottom: 30px;
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Input fields */
+    .input-group {
+      position: relative;
+      margin-bottom: 25px;
+      text-align: left;
+    }
+    
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 15px 20px;
+      margin-bottom: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background-color: var(--secondary-light);
+      color: var(--text);
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      background-color: white;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255, 77, 121, 0.1);
+    }
+    
+    input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .input-label {
+      position: absolute;
+      left: 20px;
+      top: 15px;
+      color: var(--text-muted);
+      transition: all 0.3s;
+      pointer-events: none;
+      background: transparent;
+    }
+    
+    input:focus + .input-label,
+    input:not(:placeholder-shown) + .input-label {
+      top: -10px;
+      left: 10px;
+      font-size: 12px;
+      background: white;
+      padding: 0 5px;
+      color: var(--accent);
+    }
+    
+    /* Button */
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(178, 24, 58, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(178, 24, 58, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.5s;
+    }
+    
+    button:hover::after {
+      left: 100%;
+    }
+    
+    /* Error message */
+    #error {
+      margin-top: 20px;
+      color: var(--primary);
+      font-size: 14px;
+      min-height: 20px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+    }
+    
+    #error.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-container {
+        width: 90%;
+        padding: 30px;
+      }
+    }
+  </style>
+
+</head>
+<body>
+  <div class="bg-circle circle-1"></div>
+  <div class="bg-circle circle-2"></div>
+  <div class="bg-circle circle-3"></div>
+  
+  <div class="login-container">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM8 15c0-1.66 1.34-3 3-3 .35 0 .69.07 1 .18V10c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h2v1h-2c-.55 0-1 .45-1 1s.45 1 1 1h2v1h-2c-.55 0-1 .45-1 1zm7-3c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+        </svg>
+      </div>
+      <h2>EASEPrint Admin</h2>
+    </div>
+    
+    <div class="input-group">
+      <input type="text" id="email" placeholder=" " />
+      <label class="input-label">Email</label>
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="password" placeholder=" " />
+      <label class="input-label">Password</label>
+    </div>
+    
+    <button onclick="login()">Login</button>
+    <p id="error"></p>
+    
+    <div class="footer">
+      Secure Admin Portal • v2.4.1
+    </div>
+  </div>
+
+  <script src="renderer.js">
+
+    const { ipcRenderer } = require('electron');
+    
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorElement = document.getElementById('error');
+      const loginButton = document.getElementById('loginButton');
+      
+      // Clear previous errors
+      errorElement.textContent = '';
+      errorElement.classList.remove('show');
+      
+      // Validate inputs
+      if (!email || !password) {
+        showError('Please enter both email and password');
+        return;
+      }
+      
+      // Show loading state
+      loginButton.innerHTML = '<span class="spinner"></span> Authenticating...';
+      loginButton.disabled = true;
+      
+      try {
+        // Send login request to main process
+        const result = await ipcRenderer.invoke('admin-login', email, password);
+        
+        if (result.success) {
+          // Login successful
+          showError('Login successful! Redirecting...', 'success');
+          
+          // Here you would typically redirect to the admin dashboard
+          // For now, we'll just log to console
+          console.log('Logged in as:', result.email);
+          
+          // In a real app, you would redirect:
+          // window.location.href = 'dashboard.html';
+        } else {
+          // Login failed
+          showError(result.message || 'Login failed');
+          resetLoginButton();
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showError('An error occurred during login');
+        resetLoginButton();
+      }
+    }
+    
+    function showError(message, type = 'error') {
+      const errorElement = document.getElementById('error');
+      errorElement.textContent = message;
+      errorElement.style.color = type === 'success' ? '#28a745' : '#FF4D79';
+      errorElement.classList.add('show');
+    }
+    
+    function resetLoginButton() {
+      const loginButton = document.getElementById('loginButton');
+      loginButton.textContent = 'Login';
+      loginButton.disabled = false;
+    }
+    
+    // Add animation to inputs when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach((input, index) => {
+        setTimeout(() => {
+          input.style.opacity = '1';
+          input.style.transform = 'translateY(0)';
+        }, index * 150);
+      });
+      
+      // Handle Enter key press
+      document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          login();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
