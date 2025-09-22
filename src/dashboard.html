@@ -40,37 +40,36 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>EASEPrint</h2>
-    <ul>
-      <li onclick="showSection('home')">🏠 Dashboard</li>
-      <li onclick="showSection('products')">🛍 Products</li>
-      <li onclick="showSection('orders')">📦 Orders</li>
-      <li onclick="showSection('appointments')">📅 Appointments</li>
-      <li onclick="showSection('tracking')">🚚 Tracking</li>
-      <li onclick="showSection('transactions')">📄 Transactions</li>
-      <li onclick="showSection('analytics')">📈 Analytics</li>
-      <li onclick="showSection('chat')">💬 Chat</li>
-      <li onclick="showSection('settings')">⚙️ Settings</li>
-      
-
-    </ul>
-  </div>
+  <!-- Sidebar -->
+<div class="sidebar">
+  <h2>EASEPrint</h2>
+  <ul>
+    <li onclick="showSection('home')"><i class="fas fa-home"></i> Dashboard</li>
+    <li onclick="showSection('products')"><i class="fas fa-box-open"></i> Products</li>
+    <li onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> Orders</li>
+    <li onclick="showSection('appointments')"><i class="fas fa-calendar-alt"></i> Appointments</li>
+    <li onclick="showSection('tracking')"><i class="fas fa-truck"></i> Tracking</li>
+    <li onclick="showSection('transactions')"><i class="fas fa-receipt"></i> Transactions</li>
+    <li onclick="showSection('analytics')"><i class="fas fa-chart-line"></i> Analytics</li>
+    <li onclick="showSection('chat')"><i class="fas fa-comments"></i> Chat</li>
+    <li onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</li>
+  </ul>
+</div>
 
   <div class="main">
     <div id="home">
       <h1>Dashboard</h1>
       <p>Overview of orders, sales, and top products.</p>
 
-      <div id="topSalesSection" class="hidden">
-  <h2>🏆 Top Sales</h2>
+<!-- Example Top Sales section -->
+<div id="topSalesSection" class="hidden">
+  <h2><i class="fas fa-trophy"></i> Top Sales</h2>
   <ul id="topSalesList"></ul>
 
-<div id="topSalesChartSection">
-  <h2>🏆 Top Sales Pie Chart</h2>
-  <canvas id="topSalesChart" width="400" height="400"></canvas>
-</div>
-
+  <div id="topSalesChartSection">
+    <h2><i class="fas fa-chart-pie"></i> Top Sales Pie Chart</h2>
+    <canvas id="topSalesChart" width="400" height="400"></canvas>
+  </div>
 </div>
 
     </div>
@@ -280,35 +279,47 @@
   </select>
 </div>
 
-<div id="salesTrendsSection">
-  <h2>📊 Sales Trends</h2>
-  <canvas id="salesLineChart" width="600" height="300"></canvas>
-  <canvas id="salesBarChart" width="600" height="300" style="margin-top:20px;"></canvas>
-</div>
-
+  <!-- Example Analytics Section -->
+  <div id="salesTrendsSection">
+    <h2><i class="fas fa-chart-bar"></i> Sales Trends</h2>
+    <canvas id="salesLineChart" width="600" height="300"></canvas>
+    <canvas id="salesBarChart" width="600" height="300" style="margin-top:20px;"></canvas>
+  </div>
+  </div>
     
-    </div>
-    
-
-
+  <!-- Chat Section -->
   <div id="chat" class="hidden">
-  <h1>Customer Support Chat</h1>
-
-  <label for="customerSelect">Choose a customer:</label>
-  <select id="customerSelect" onchange="handleCustomerChange()">
-    <option disabled selected value="">-- Select a Customer --</option>
-  </select>
-
-  <div id="chatBox"></div>
-
-  <input id="chatInput" type="text" placeholder="Type a message..." />
-  <button onclick="sendMessage()">Send Message</button>
-</div>
-
-    <div id="settings" class="hidden">
-      <h1>Account Settings</h1>
-      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <div class="chat-header">
+      <h1 id="chatTitle">Customer Support Chat</h1>
     </div>
+
+    <!-- Top row: Active customer + Dropdown -->
+    <div class="chat-header-row">
+      <div id="activeCustomer" class="active-customer">No customer selected</div>
+
+      <div class="custom-select" id="customerSelectWrapper">
+        <button id="customerSelectBtn" class="select-btn" aria-haspopup="listbox" aria-expanded="false">
+          -- Select a Customer -- <i class="fas fa-caret-down" style="margin-left:8px"></i>
+        </button>
+        <ul id="customerList" class="select-list hidden" role="listbox" tabindex="-1"></ul>
+      </div>
+    </div>
+
+    <!-- chat messages box -->
+    <div id="chatBox"></div>
+
+    <!-- input row -->
+    <div class="chat-input-row">
+      <input id="chatInput" type="text" placeholder="Type a message..." />
+      <button id="sendMsgBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings" class="hidden">
+    <h1>Account Settings</h1>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
   </div>
 
   <!-- Edit Modal -->
@@ -384,24 +395,30 @@
       const products = await res.json();
       const tbody = document.querySelector('#productTable tbody');
       tbody.innerHTML = '';
-      products.forEach(p => {
-              const row = `
-        <tr>
-          <td><img src="http://127.0.0.1:8000/storage/${p.image}" width="50" /></td>
-          <td>${p.name}</td>
-          <td>${p.price}</td>
-          <td>${p.stock}</td>
-          <td>${p.description}</td>
-          <td>
-            <button class="edit-btn" onclick="editProduct(${p.id})">✏️ Edit</button>
-            <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑️ Delete</button>
-          </td>
-        </tr>
-      `;
 
+      products.forEach(p => {
+        const imageSrc = p.image_url || 'placeholder.png'; // fallback if no image
+        const row = `
+          <tr>
+            <td><img src="${imageSrc}" width="50" /></td>
+            <td>${p.name}</td>
+            <td>${p.price}</td>
+            <td>${p.stock}</td>
+            <td>${p.description}</td>
+            <td>
+              <button class="edit-btn" onclick="editProduct(${p.id})">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="delete-btn" onclick="deleteProduct(${p.id})">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        `;
         tbody.insertAdjacentHTML('beforeend', row);
       });
     }
+
 
     function editProduct(id) {
       fetch('http://127.0.0.1:8000/api/admin/products', {
@@ -526,26 +543,130 @@ async function loadCustomers() {
   updateCustomerUnreadIndicators();
 }
 
-function updateCustomerUnreadIndicators() {
-  const select = document.getElementById('customerSelect');
-  for (let i = 0; i < select.options.length; i++) {
-    const option = select.options[i];
-    if (!option.value) continue; // skip placeholder
+// escape helper
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"'`=\/]/g, function(s) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[s];
+  });
+}
 
-    // Check if this customer has unread messages
-    hasUnread(option.value).then(unread => {
-      if (unread) {
-        // Add red dot or badge in option text
-        if (!option.textContent.includes(' 🔴')) {
-          option.textContent += ' 🔴';
-        }
-      } else {
-        // Remove unread dot if present
-        option.textContent = option.textContent.replace(' 🔴', '');
-      }
+async function loadCustomers() {
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/customers');
+    const customers = await res.json();
+
+    const list = document.getElementById('customerList');
+    const btn = document.getElementById('customerSelectBtn');
+
+    // reset
+    list.innerHTML = '';
+    btn.textContent = '-- Select a Customer -- ';
+    btn.removeAttribute('data-id');
+    btn.setAttribute('aria-expanded', 'false');
+
+    customers.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'customer-item';
+      li.dataset.id = c.id;
+      li.innerHTML = `
+        <span class="customer-name">${escapeHtml(c.name)}</span>
+        <span class="unread-dot"></span>
+      `;
+      li.addEventListener('click', () => selectCustomer(c));
+      list.appendChild(li);
     });
+
+    updateCustomerUnreadIndicators();
+  } catch (err) {
+    console.error('Failed to load customers:', err);
   }
 }
+
+function selectCustomer(c) {
+  const btn = document.getElementById('customerSelectBtn');
+  const list = document.getElementById('customerList');
+
+  btn.textContent = c.name;
+  btn.dataset.id = c.id;
+  btn.setAttribute('aria-expanded', 'false');
+  list.classList.add('hidden');
+
+  selectedCustomerId = c.id;
+
+  // ✅ Update header
+  document.getElementById('activeCustomer').textContent = c.name;
+
+  // clear unread dot for this customer
+  const dot = document.querySelector(`#customerList li[data-id="${c.id}"] .unread-dot`);
+  if (dot) dot.innerHTML = '';
+
+  // remove button dot if no other unread
+  const stillUnread = Array.from(document.querySelectorAll('#customerList .unread-dot'))
+    .some(d => d.innerHTML.trim() !== '');
+  const btnDot = btn.querySelector('.btn-unread-dot');
+  if (btnDot && !stillUnread) btnDot.remove();
+
+  fetchMessages();
+  markMessagesRead(c.id);
+}
+
+async function updateCustomerUnreadIndicators() {
+  const items = Array.from(document.querySelectorAll('#customerList li'));
+  for (const li of items) {
+    const id = li.dataset.id;
+    const placeholder = li.querySelector('.unread-dot');
+
+    let unread = !!hasNewMessageMap[id];
+    if (!unread) {
+      try { unread = await hasUnread(id); } catch { unread = false; }
+    }
+
+    if (unread) {
+      placeholder.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg>`;
+    } else {
+      placeholder.innerHTML = '';
+    }
+  }
+
+  // button dot
+  const anyUnread = items.some(li => li.querySelector('.unread-dot').innerHTML.trim() !== '');
+  const btn = document.getElementById('customerSelectBtn');
+  if (btn) {
+    if (anyUnread) {
+      if (!btn.querySelector('.btn-unread-dot')) {
+        const dot = document.createElement('span');
+        dot.className = 'btn-unread-dot';
+        dot.style.cssText = 'display:inline-block;width:10px;height:10px;border-radius:50%;background:#28a745;margin-left:8px;';
+        btn.appendChild(dot);
+      }
+    } else {
+      const old = btn.querySelector('.btn-unread-dot');
+      if (old) old.remove();
+    }
+  }
+}
+
+// dropdown toggle
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('customerSelectWrapper');
+  const btn = document.getElementById('customerSelectBtn');
+  const list = document.getElementById('customerList');
+  if (!wrapper) return;
+
+  if (e.target.closest('#customerSelectBtn')) {
+    const isOpen = !list.classList.contains('hidden');
+    list.classList.toggle('hidden', isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+    return;
+  }
+
+  if (!e.target.closest('#customerSelectWrapper')) {
+    list.classList.add('hidden');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', loadCustomers);
 
 async function hasUnread(customerId) {
   if (hasNewMessageMap[customerId]) {
@@ -618,12 +739,12 @@ async function fetchMessages() {
     wrapper.classList.add('message-wrapper', isSent ? 'sent-wrapper' : 'received-wrapper');
 
     wrapper.innerHTML = `
-      <div class="timestamp-only">${timestamp}</div>
       <div class="message ${isSent ? 'sent' : 'received'} ${isUnread ? 'unread' : 'read'}">
-        <strong>${msg.is_admin ? 'Admin' : msg.sender.name}:</strong> ${msg.message}
-        ${isUnread ? '<span class="unread-indicator" title="Unread">•</span>' : ''}
+        ${msg.message}
       </div>
+      <div class="timestamp-only">${timestamp}</div>
     `;
+
 
     chatBox.appendChild(wrapper);
   });
@@ -1423,6 +1544,50 @@ document.getElementById('appointmentsReloadBtn').addEventListener('click', loadA
 appointmentsStatusFilter.addEventListener('change', loadAppointments);
 
 loadAppointments();
+
+
+// Enable Enter key to submit forms properly
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Enter") {
+      const active = document.activeElement;
+
+      // Product form
+      if (active.closest("#productForm")) {
+        event.preventDefault();
+        document.getElementById("productForm").dispatchEvent(new Event("submit"));
+      }
+
+      // Edit form
+      if (active.closest("#editForm")) {
+        event.preventDefault();
+        document.getElementById("editForm").dispatchEvent(new Event("submit"));
+      }
+
+      // Transactions form
+      if (active.closest("#transactions")) {
+        event.preventDefault();
+        submitTransaction();
+      }
+
+      // Chat
+      if (active.closest("#chat")) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("loginBtn").click();
+      }
+    });
+  }
+});
 
 
   </script>
