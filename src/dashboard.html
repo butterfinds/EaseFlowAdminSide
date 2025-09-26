@@ -25,7 +25,7 @@
     }
     img { max-width: 100%; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     table, th, td { border: 1px solid #ccc; }
     th, td { padding: 10px; text-align: left; }
     button { padding: 5px 10px; margin: 2px; cursor: pointer; }
@@ -76,15 +76,26 @@
 
     <div id="products" class="hidden">
       <h1>Product Upload</h1>
-      <form id="productForm" enctype="multipart/form-data">
-        <input type="text" id="productName" placeholder="Product Name" required />
-        <input type="text" id="productPrice" placeholder="Price (e.g. 99.99)" required />
-        <input type="number" id="productStock" placeholder="Stock Quantity" required />
-        <input type="file" id="productImage" accept="image/*" required />
-        <textarea id="productDescription" placeholder="Description..." required></textarea>
-        <button type="submit">Upload Product</button>
-        <p id="uploadStatus"></p>
+      <form id="productForm">
+        <input type="text" id="productName" placeholder="Product Name" required>
+        <input type="number" id="productPrice" placeholder="Price" required>
+        <input type="number" id="productStock" placeholder="Stock" required>
+        <textarea id="productDescription" placeholder="Description"></textarea>
+        <input type="file" id="productImage" required>
+
+        <!-- Category Dropdown -->
+        <select id="productCategory" required>
+          <option value="">Select Category</option>
+          <option value="1">Jerseys</option>
+          <option value="2">Shirts</option>
+          <option value="3">Shorts</option>
+          <option value="4">Jackets</option>
+          <option value="5">Others</option>
+        </select>
+
+        <button type="submit">Upload</button>
       </form>
+
 
       <h2>Uploaded Products</h2>
       <table id="productTable" border="1">
@@ -101,6 +112,17 @@
         <tbody></tbody>
       </table>
     </div>
+
+        <!-- Modal -->
+    <div id="statusModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+        <h2 id="modalMessage" class="text-lg font-bold mb-4"></h2>
+        <button onclick="closeModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+          OK
+        </button>
+      </div>
+    </div>
+
 
    <!-- ORDER DIV -->
     <div id="orders" class="hidden">
@@ -357,67 +379,102 @@
       window.location.href = 'index.html';
     }
 
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+// Product Upload
+document.getElementById('productForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-      const formData = new FormData();
-      formData.append('name', document.getElementById('productName').value);
-      formData.append('price', document.getElementById('productPrice').value);
-      formData.append('stock', document.getElementById('productStock').value);
-      formData.append('description', document.getElementById('productDescription').value);
-      formData.append('image', document.getElementById('productImage').files[0]);
+  const formData = new FormData();
+  formData.append('name', document.getElementById('productName').value);
+  formData.append('price', document.getElementById('productPrice').value);
+  formData.append('stock', document.getElementById('productStock').value);
+  formData.append('description', document.getElementById('productDescription').value);
+  formData.append('image', document.getElementById('productImage').files[0]);
+  formData.append('category_id', document.getElementById('productCategory').value);
 
-      try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          body: formData
-        });
-
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Upload failed');
-
-        document.getElementById('uploadStatus').innerText = 'Uploaded!';
-      e.target.reset();
-      loadProducts();
-      } catch (err) {
-        console.error('Upload error:', err);
-        document.getElementById('uploadStatus').innerText = 'Upload failed: ' + err.message;
-      }
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
     });
 
-    async function loadProducts() {
-      const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const products = await res.json();
-      const tbody = document.querySelector('#productTable tbody');
-      tbody.innerHTML = '';
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || 'Upload failed');
 
-      products.forEach(p => {
-        const imageSrc = p.image_url || 'placeholder.png'; // fallback if no image
-        const row = `
-          <tr>
-            <td><img src="${imageSrc}" width="50" /></td>
-            <td>${p.name}</td>
-            <td>${p.price}</td>
-            <td>${p.stock}</td>
-            <td>${p.description}</td>
-            <td>
-              <button class="edit-btn" onclick="editProduct(${p.id})">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="delete-btn" onclick="deleteProduct(${p.id})">
-                <i class="fas fa-trash"></i> Delete
-              </button>
-            </td>
-          </tr>
-        `;
-        tbody.insertAdjacentHTML('beforeend', row);
-      });
-    }
+    // Reset form and reload
+    e.target.reset();
+    loadProducts();
+
+    // Show success toast
+    showToast('Product uploaded successfully!', 'success');
+  } catch (err) {
+    console.error('Upload error:', err);
+
+    // Show error toast
+    showToast('Upload failed: ' + err.message, 'error');
+  }
+});
+
+// Load categories into the dropdown
+async function loadCategories() {
+  const res = await fetch('http://127.0.0.1:8000/api/categories', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const categories = await res.json();
+
+  const categorySelect = document.getElementById('productCategory');
+  categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+
+  categories.forEach(c => {
+    categorySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+}
+
+// Call it when the page loads
+loadCategories();
+
+
+async function loadProducts() {
+  const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const products = await res.json();
+  const tbody = document.querySelector('#productTable tbody');
+  tbody.innerHTML = '';
+
+  products.forEach(p => {
+    const imageSrc = p.image_url || 'placeholder.png'; // fallback if no image
+    const row = `
+      <tr>
+        <td><img src="${imageSrc}" width="50" /></td>
+        <td>${p.name}</td>
+        <td>${p.price}</td>
+        <td>${p.stock}</td>
+        <td>${p.description}</td>
+        <td>
+          <button class="edit-btn" onclick="editProduct(${p.id})">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="delete-btn" onclick="deleteProduct(${p.id})">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML('beforeend', row);
+  });
+}
+
+function closeModal() {
+  document.getElementById('statusModal').classList.add('hidden');
+}
+
+  function closeModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+  }
+
 
 
     function editProduct(id) {
