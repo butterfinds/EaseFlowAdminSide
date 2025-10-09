@@ -124,38 +124,36 @@
     </div>
 
 
-   <!-- ORDER DIV -->
-    <div id="orders" class="hidden">
-      <h1>Orders</h1>
+<!-- ORDER DIV -->
+<div id="orders" class="hidden">
+  <h1>Orders</h1>
 
-      <button class="refresh-btn" onclick="fetchOrders()">
-        <i class="fas fa-sync-alt"></i> Refresh
-      </button>
+  <button class="refresh-btn" onclick="fetchOrders()">
+    <i class="fas fa-sync-alt"></i> Refresh
+  </button>
 
-      <table id="ordersTable" border="1" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
-        <thead>
-          <tr>
-  <th>ID</th>
-  <th>User</th>
-  <th>Phone</th>
-  <th>Address</th>
-  <th>Total</th>
-  <th>Items</th>
-  <th>Status</th>
-  <th>Date</th>
-  <th>Actions</th>
-</tr>
-
-        </thead>
-        <tbody>
-          <tr><td colspan="7">Loading orders...</td></tr>
-        </tbody>
-      </table>
+  <table id="ordersTable" border="1" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Phone</th>
+        <th>Total</th>
+        <th>Items</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="8">Loading orders...</td></tr>
+    </tbody>
+  </table>
 </div>
 
-    <div id="appointments" class="hidden"><h1>Appointments</h1>
-    
-   <h1>Custom Shirt Requests</h1>
+
+  <div id="appointments" class="hidden"><h1>Appointments</h1>
+  <h1>Custom Shirt Requests</h1>
 
   <!-- Filter Dropdown -->
   <div class="filter-box">
@@ -913,10 +911,6 @@ if ('Notification' in window && Notification.permission !== 'granted') {
 }
 
 
-
-
-
-
 let selectedTransactionId = null;
 
   // 🟢 Load Transactions on Page Load
@@ -1400,18 +1394,23 @@ async function rejectAppointment(id) {
 }
 
 
-// Placing orders // orders
 async function fetchOrders() {
   const ordersTableBody = document.querySelector('#ordersTable tbody');
-  ordersTableBody.innerHTML = '<tr><td colspan="7">Loading orders...</td></tr>';
+  ordersTableBody.innerHTML = '<tr><td colspan="8">Loading orders...</td></tr>';
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/admin/orders');
+    const token = localStorage.getItem('adminToken'); // ✅ Get token from login
+    const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
     const data = await response.json();
     console.log("Fetched orders:", data);
 
     if (data.length === 0) {
-      ordersTableBody.innerHTML = '<tr><td colspan="7">No orders found.</td></tr>';
+      ordersTableBody.innerHTML = '<tr><td colspan="8">No orders found.</td></tr>';
       return;
     }
 
@@ -1453,19 +1452,19 @@ async function fetchOrders() {
           </button>
         `;
       } else if (normalizedStatus === 'approved' || normalizedStatus === 'rejected') {
-          const statusClass = normalizedStatus === 'approved' ? 'approved' : 'rejected';
-          actions += `
-            <select onchange="handleEditStatus(${order.id}, this.value)" 
-              class="order-status-dropdown ${statusClass}">
-              <option value="">✏ Edit Status</option>
-              <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>
-                ✔ Approved
-              </option>
-              <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>
-                ✖ Rejected
-              </option>
-            </select>
-          `;
+        const statusClass = normalizedStatus === 'approved' ? 'approved' : 'rejected';
+        actions += `
+          <select onchange="handleEditStatus(${order.id}, this.value)" 
+            class="order-status-dropdown ${statusClass}">
+            <option value="">✏ Edit Status</option>
+            <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>
+              ✔ Approved
+            </option>
+            <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>
+              ✖ Rejected
+            </option>
+          </select>
+        `;
       }
 
       // --- ADD DELETE BUTTON ---
@@ -1482,7 +1481,6 @@ async function fetchOrders() {
           <td>${order.id}</td>
           <td>${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
           <td>${order.delivery_phone ?? 'N/A'}</td>
-          <td>${order.delivery_address ?? 'N/A'}</td>
           <td>${order.total}</td>
           <td>${items}</td>
           <td><span style="color: ${statusColor}; font-weight: bold;">${order.status}</span></td>
@@ -1494,9 +1492,10 @@ async function fetchOrders() {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    ordersTableBody.innerHTML = '<tr><td colspan="7">Error loading orders.</td></tr>';
+    ordersTableBody.innerHTML = '<tr><td colspan="8">Error loading orders.</td></tr>';
   }
 }
+
 
 // Update order status
 function showToast(message, type = "success") {
@@ -1518,9 +1517,13 @@ function showToast(message, type = "success") {
 
 async function updateOrderStatus(orderId, status) {
   try {
+    const token = localStorage.getItem('adminToken'); // ✅ Use token
     const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // ✅ Add header
+      },
       body: JSON.stringify({ status })
     });
 
@@ -1571,9 +1574,13 @@ async function deleteOrder(orderId) {
   if (!confirm(`Are you sure you want to delete Order #${orderId}?`)) return;
 
   try {
+    const token = localStorage.getItem('adminToken'); // ✅ Use token
     const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // ✅ Add header
+      },
     });
 
     if (response.ok) {
@@ -1593,6 +1600,7 @@ async function deleteOrder(orderId) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchOrders();
 });
+
 
 
 

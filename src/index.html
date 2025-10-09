@@ -302,7 +302,7 @@
       <label class="input-label">Password</label>
     </div>
     
-    <button onclick="login()">Login</button>
+    <button id="loginButton" onclick="login()">Login</button>
     <p id="error"></p>
     
     <div class="footer">
@@ -313,41 +313,43 @@
   <script src="renderer.js">
 
     const { ipcRenderer } = require('electron');
-    
+
     async function login() {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const errorElement = document.getElementById('error');
       const loginButton = document.getElementById('loginButton');
-      
+
       // Clear previous errors
       errorElement.textContent = '';
       errorElement.classList.remove('show');
-      
+
       // Validate inputs
       if (!email || !password) {
         showError('Please enter both email and password');
         return;
       }
-      
+
       // Show loading state
       loginButton.innerHTML = '<span class="spinner"></span> Authenticating...';
       loginButton.disabled = true;
-      
+
       try {
         // Send login request to main process
         const result = await ipcRenderer.invoke('admin-login', email, password);
-        
+
         if (result.success) {
+          // Store token for future API requests
+          localStorage.setItem('adminToken', result.token);
+
           // Login successful
           showError('Login successful! Redirecting...', 'success');
-          
+
           // Here you would typically redirect to the admin dashboard
-          // For now, we'll just log to console
           console.log('Logged in as:', result.email);
-          
-          // In a real app, you would redirect:
-          // window.location.href = 'dashboard.html';
+
+          // Example: fetch orders immediately after login
+          // fetchOrders(); // make sure fetchOrders uses Authorization header
         } else {
           // Login failed
           showError(result.message || 'Login failed');
@@ -359,20 +361,20 @@
         resetLoginButton();
       }
     }
-    
+
     function showError(message, type = 'error') {
       const errorElement = document.getElementById('error');
       errorElement.textContent = message;
       errorElement.style.color = type === 'success' ? '#28a745' : '#FF4D79';
       errorElement.classList.add('show');
     }
-    
+
     function resetLoginButton() {
       const loginButton = document.getElementById('loginButton');
       loginButton.textContent = 'Login';
       loginButton.disabled = false;
     }
-    
+
     // Add animation to inputs when page loads
     document.addEventListener('DOMContentLoaded', () => {
       const inputs = document.querySelectorAll('input');
@@ -382,7 +384,7 @@
           input.style.transform = 'translateY(0)';
         }, index * 150);
       });
-      
+
       // Handle Enter key press
       document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -390,6 +392,7 @@
         }
       });
     });
+
   </script>
 </body>
 </html>
