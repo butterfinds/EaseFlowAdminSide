@@ -18,7 +18,7 @@
     "twilio": "^5.9.0"
   },
   "devDependencies": {
-    "electron": "^30.5.1"
+    "electron": "^38.1.2"
   },
   "keywords": [],
   "author": "",
