@@ -124,7 +124,7 @@
   <table id="ordersTable" border="1" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Order ID</th>
         <th>User</th>
         <th>Phone</th>
         <th>Total</th>
@@ -1382,13 +1382,13 @@ async function rejectAppointment(id) {
   loadAppointments();
 }
 
-
+// Orders
 async function fetchOrders() {
   const ordersTableBody = document.querySelector('#ordersTable tbody');
   ordersTableBody.innerHTML = '<tr><td colspan="8">Loading orders...</td></tr>';
 
   try {
-    const token = localStorage.getItem('adminToken'); // ✅ Get token from login
+    const token = localStorage.getItem('adminToken'); 
     const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1456,7 +1456,7 @@ async function fetchOrders() {
         `;
       }
 
-      // --- ADD DELETE BUTTON ---
+      // Delete button
       actions += `
         <button onclick="deleteOrder(${order.id})" 
           class="order-action-btn delete">
@@ -1464,10 +1464,24 @@ async function fetchOrders() {
         </button>
       `;
 
-      // Build row
+      // Row with copy button
       const row = `
         <tr>
-          <td>${order.id}</td>
+            <td style="padding: 6px 10px; white-space: nowrap;">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span>${order.order_id}</span>
+                <button 
+                  onclick="copyOrderId('${order.order_id}', this)"
+                  style="display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; padding: 0; padding-right: 8px;"
+                  title="Copy Order ID"
+                  onmouseover="this.querySelector('i').style.color='#000'"
+                  onmouseout="this.querySelector('i').style.color='#666'"
+                >
+                  <i class="fas fa-clipboard" style="color: #666; font-size: 15px; transition: color 0.2s;"></i>
+                  <span style="font-size: 12px; color: black; opacity: 0.7; line-height: 1;">Copy ID</span>
+                </button>
+              </div>
+            </td>
           <td>${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
           <td>${order.delivery_phone ?? 'N/A'}</td>
           <td>${order.total}</td>
@@ -1485,8 +1499,29 @@ async function fetchOrders() {
   }
 }
 
+// Copy Order ID to clipboard
+function copyOrderId(orderId, btn) {
+  navigator.clipboard.writeText(orderId)
+    .then(() => {
+      showToast(`Order ID ${orderId} copied`, "success");
+      
+      const icon = btn.querySelector('i');
+      const originalClass = icon.className;
+      icon.className = 'fas fa-check';
+      icon.style.color = '#4CAF50';
 
-// Update order status
+      setTimeout(() => {
+        icon.className = originalClass;
+        icon.style.color = '#888';
+      }, 1000);
+    })
+    .catch(err => {
+      console.error("Failed to copy Order ID:", err);
+      showToast("Failed to copy Order ID", "error");
+    });
+}
+
+// Toast function
 function showToast(message, type = "success") {
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
@@ -1494,36 +1529,34 @@ function showToast(message, type = "success") {
 
   document.body.appendChild(toast);
 
-  // trigger animation
   setTimeout(() => toast.classList.add("show"), 100);
 
-  // remove after 3s
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
+// Update order status
 async function updateOrderStatus(orderId, status) {
   try {
-    const token = localStorage.getItem('adminToken'); // ✅ Use token
+    const token = localStorage.getItem('adminToken'); 
     const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // ✅ Add header
+        'Authorization': `Bearer ${token}` 
       },
       body: JSON.stringify({ status })
     });
 
     if (response.ok) {
-      const data = await response.json(); // Get updated order from API
+      const data = await response.json();
       const order = data.order;
 
-      showToast(`Order #${orderId} marked as ${status}`, "success");
+      showToast(`Order ${order.order_id} marked as ${status}`, "success");
 
-      // ✅ Send SMS via Electron safely
-      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order #${orderId} has been ${status}.`;
+      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
       if (order.delivery_phone) {
         try {
           window.electronAPI.sendSMS(order.delivery_phone, message);
@@ -1535,7 +1568,7 @@ async function updateOrderStatus(orderId, status) {
         console.warn('No phone number found for this order.');
       }
 
-      fetchOrders(); // reload table
+      fetchOrders();
     } else {
       console.error("Failed to update order status");
       showToast("Error updating order status", "error");
@@ -1554,27 +1587,31 @@ async function updateOrderStatus(orderId, status) {
 
 // Handle edit dropdown
 function handleEditStatus(orderId, newStatus) {
-  if (!newStatus) return; // ignore placeholder
+  if (!newStatus) return;
   updateOrderStatus(orderId, newStatus);
 }
 
-// --- DELETE ORDER FUNCTION ---
+// Delete order
 async function deleteOrder(orderId) {
-  if (!confirm(`Are you sure you want to delete Order #${orderId}?`)) return;
+  // Grab the order_id from the table row for nicer message
+  const row = document.querySelector(`#ordersTable tbody tr button[onclick="deleteOrder(${orderId})"]`)?.closest('tr');
+  const orderCode = row?.querySelector('td span')?.textContent || orderId;
+
+  if (!confirm(`Are you sure you want to delete Order ${orderCode}?`)) return;
 
   try {
-    const token = localStorage.getItem('adminToken'); // ✅ Use token
+    const token = localStorage.getItem('adminToken'); 
     const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
       method: 'DELETE',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // ✅ Add header
+        'Authorization': `Bearer ${token}` 
       },
     });
 
     if (response.ok) {
-      showToast(`Order #${orderId} has been deleted`, "success");
-      fetchOrders(); // reload table
+      showToast(`Order ${orderCode} has been deleted`, "success");
+      fetchOrders();
     } else {
       console.error("Failed to delete order");
       showToast("Error deleting order", "error");
@@ -1585,10 +1622,11 @@ async function deleteOrder(orderId) {
   }
 }
 
-// Auto-load on page/app start
+// Auto-load
 document.addEventListener('DOMContentLoaded', () => {
   fetchOrders();
 });
+
 
 
 

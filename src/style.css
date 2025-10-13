@@ -718,3 +718,21 @@ td:last-child {
   font-size: 16px;       /* adjust icon size */
 }
 
+#ordersTable th,
+#ordersTable td {
+  padding: 6px 10px; /* tighter spacing */
+  vertical-align: middle;
+}
+
+#ordersTable th {
+  text-align: left;
+}
+
+#ordersTable td button:hover i {
+  color: #000;
+  opacity: 0.8;
+}
+
+#ordersTable td button:hover span {
+  opacity: 1;
+}
