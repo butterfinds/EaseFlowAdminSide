@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +7,7 @@
   <title>EASEPrint Admin Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .hidden { display: none; }
     #editModal {
@@ -36,12 +39,33 @@
     .filter-box { margin-bottom: 15px; }
     select { padding: 5px; }
     
+    /* Toast */
+    #toast-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #1f2937;
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        font-size: 0.875rem;
+        transition: opacity 0.3s, transform 0.3s;
+        opacity: 0;
+        z-index: 100;
+    }
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 0; transform: translateY(20px); }
+        10%, 90% { opacity: 1; transform: translateY(0); }
+    }
+    .toast-active {
+        animation: fadeInOut 3s forwards;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- Sidebar -->
-<div class="sidebar">
+  <div class="sidebar">
   <h2>EASEPrint</h2>
   <ul>
     <li onclick="showSection('home')"><i class="fas fa-home"></i> Dashboard</li>
@@ -61,7 +85,6 @@
       <h1>Dashboard</h1>
       <p>Overview of orders, sales, and top products.</p>
 
-<!-- Example Top Sales section -->
 <div id="topSalesSection" class="hidden">
   <h2><i class="fas fa-trophy"></i> Top Sales</h2>
   <ul id="topSalesList"></ul>
@@ -83,7 +106,6 @@
         <textarea id="productDescription" placeholder="Description"></textarea>
         <input type="file" id="productImage" required>
 
-        <!-- Category Dropdown -->
         <select id="productCategory" required>
           <option value="">Select Category</option>
           <option value="1">Jerseys</option>
@@ -113,7 +135,6 @@
       </table>
     </div>
 
-<!-- ORDER DIV -->
 <div id="orders" class="hidden">
   <h1>Orders</h1>
 
@@ -144,7 +165,6 @@
   <div id="appointments" class="hidden"><h1>Appointments</h1>
   <h1>Custom Shirt Requests</h1>
 
-  <!-- Filter Dropdown -->
   <div class="filter-box">
     <label for="statusFilter">Show: </label>
     <select id="statusFilter" onchange="fetchRequests()">
@@ -207,10 +227,11 @@
 
 
 
-    <div id="tracking" class="hidden"><h1>Tracking</h1>
-    
-    
-    </div>
+<div id="tracking" class="hidden">
+    <h1>Order Tracking</h1>
+    <div id="tracking-section">
+        </div>
+</div>
 
 
  <div id="transactions" class="hidden"><h1>Record Manual Transaction</h1>
@@ -236,8 +257,7 @@
 <table border="1" style="width: 100%">
   <thead>
     <tr>
-      <th>Date</th> <!-- 🆕 -->
-      <th>Item Name</th>
+      <th>Date</th> <th>Item Name</th>
       <th>Unit Price</th>
       <th>Quantity</th>
       <th>Order Status</th>
@@ -250,7 +270,6 @@
 
 </div>
 
-<!-- Transaction Edit Modal -->
 <div id="transactionModal" class="modal hidden" style="
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
   background: white; padding: 20px; border: 1px solid #ccc; z-index: 1000;
@@ -270,7 +289,7 @@
   </select>
   <br><br>
   <button onclick="saveEdit()">Save</button>
-  <button onclick="closeModal()">Cancel</button>
+  <button onclick="closeTransactionModal()">Cancel</button>
 </div>
 
 
@@ -288,7 +307,6 @@
   </select>
 </div>
 
-  <!-- Example Analytics Section -->
   <div id="salesTrendsSection">
     <h2><i class="fas fa-chart-bar"></i> Sales Trends</h2>
     <canvas id="salesLineChart" width="600" height="300"></canvas>
@@ -296,13 +314,11 @@
   </div>
   </div>
     
-  <!-- Chat Section -->
   <div id="chat" class="hidden">
     <div class="chat-header">
       <h1 id="chatTitle">Customer Support Chat</h1>
     </div>
 
-    <!-- Top row: Active customer + Dropdown -->
     <div class="chat-header-row">
       <div id="activeCustomer" class="active-customer">No customer selected</div>
 
@@ -314,24 +330,20 @@
       </div>
     </div>
 
-    <!-- chat messages box -->
     <div id="chatBox"></div>
 
-    <!-- input row -->
     <div class="chat-input-row">
       <input id="chatInput" type="text" placeholder="Type a message..." />
       <button id="sendMsgBtn" onclick="sendMessage()">Send</button>
     </div>
   </div>
 
-  <!-- Settings -->
   <div id="settings" class="hidden">
     <h1>Account Settings</h1>
     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
   </div>
 
-  <!-- Edit Modal -->
   <div id="editModal">
     <form id="editForm" enctype="multipart/form-data">
       <h3>Edit Product</h3>
@@ -346,24 +358,27 @@
     </form>
   </div>
 
-
+  <div id="toast-notification">
+      <p id="toast-message"></p>
+  </div>
 
 
   <script>
     const token = localStorage.getItem('adminToken');
-    if (!token) window.location.href = 'index.html';
+    if (!token) window.location.href = './index.html';
 
     function showSection(id) {
       document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
       if (id === 'products') loadProducts();
       if (id === 'transactions') fetchTransactions();
+      if (id === 'tracking') initializeTracking();
     }
 
     function logout() {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminEmail');
-      window.location.href = 'index.html';
+      window.location.href = './index.html';
     }
 
 // Product Upload
@@ -454,16 +469,6 @@ async function loadProducts() {
   });
 }
 
-function closeModal() {
-  document.getElementById('statusModal').classList.add('hidden');
-}
-
-  function closeModal() {
-    document.getElementById('statusModal').classList.add('hidden');
-  }
-
-
-
     function editProduct(id) {
       fetch('http://127.0.0.1:8000/api/admin/products', {
         headers: { Authorization: `Bearer ${token}` }
@@ -542,15 +547,12 @@ async function deleteProduct(id) {
     
     // Reset the product form
     document.getElementById('productForm').reset();
-    document.getElementById('uploadStatus').innerText = 'Product deleted successfully';
-    document.getElementById('uploadStatus').style.color = 'green';
     
     // Reload products after a short delay
     loadProducts();
   } catch (err) {
     console.error('Delete error:', err);
-    document.getElementById('uploadStatus').innerText = 'Error: ' + err.message;
-    document.getElementById('uploadStatus').style.color = 'red';
+    alert('Delete failed: ' + err.message);
   }
 }
 
@@ -921,8 +923,7 @@ async function fetchTransactions() {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${date}</td> <!-- 🆕 Display formatted date -->
-      <td>${tx.item_name}</td>
+      <td>${date}</td> <td>${tx.item_name}</td>
       <td>${tx.unit_price}</td>
       <td>${tx.quantity}</td>
       <td>${tx.order_status}</td>
@@ -983,7 +984,7 @@ async function submitTransaction() {
     responseDiv.style.color = "red";
     console.error(err);
   }
- 
+  
 
 }
 
@@ -1002,7 +1003,7 @@ function openEditModal(id, item_name, unit_price, quantity, order_status, paymen
 }
 
 // Close Edit Modal
-function closeModal() {
+function closeTransactionModal() {
   document.getElementById('transactionModal').classList.add('hidden');
 }
 
@@ -1031,7 +1032,7 @@ async function saveEdit() {
       })
     });
 
-    closeModal();
+    closeTransactionModal();
     fetchTransactions();
   } catch (err) {
     console.error("Update failed:", err);
@@ -1682,6 +1683,214 @@ document.addEventListener('keydown', function(event) {
 });
 
 
+// TRACKING SYSTEM
+async function initializeTracking() {
+    // --- DATA & CONFIGURATION ---
+    const STAGES = ['Approved', 'Preparing', 'Shipment', 'Shipped Out', 'On Delivery', 'Delivered'];
+    const STAGE_ICONS = {
+        'Approved': 'check-circle-2', 'Preparing': 'package-search', 'Shipment': 'truck',
+        'Shipped Out': 'send', 'On Delivery': 'map-pin', 'Delivered': 'home'
+    };
+    let orders = [];
+
+    // --- DOM ELEMENTS ---
+    const trackingSection = document.getElementById('tracking-section');
+    const toastElement = document.getElementById('toast-notification');
+    const toastMessage = document.getElementById('toast-message');
+
+    // --- FUNCTIONS ---
+
+    // ADDED: Helper function to format the timestamp string.
+    const formatOrderTimestamp = (isoString) => {
+        if (!isoString) return 'Not available';
+        const date = new Date(isoString);
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        };
+        return date.toLocaleString('en-US', options);
+    };
+
+    const showTrackingToast = (message) => {
+        toastMessage.textContent = message;
+        toastElement.classList.add('toast-active');
+        setTimeout(() => {
+            toastElement.classList.remove('toast-active');
+        }, 3000);
+    };
+
+    const updateTrackerUI = (orderCard, currentStage) => {
+        const currentStageIndex = STAGES.indexOf(currentStage);
+        const steps = orderCard.querySelectorAll('.progress-step');
+        steps.forEach((step, index) => {
+            step.classList.remove('current', 'completed', 'tracking-pending');
+            
+            if (index < currentStageIndex) {
+                step.classList.add('completed');
+            } else if (index === currentStageIndex) {
+                step.classList.add('current');
+            } else {
+                step.classList.add('tracking-pending');
+            }
+        });
+        
+        const dropdown = orderCard.querySelector('.stage-select');
+        const nextButton = orderCard.querySelector('.next-stage-btn');
+        const isDelivered = currentStage === 'Delivered';
+        const isAtFinalAdminStage = currentStage === 'On Delivery';
+
+        if (dropdown) {
+            dropdown.value = currentStage;
+            dropdown.disabled = isDelivered;
+        }
+        if (nextButton) {
+            nextButton.disabled = isAtFinalAdminStage || isDelivered;
+        }
+    };
+
+    const renderOrders = () => {
+        trackingSection.innerHTML = '';
+        if (orders.length === 0) {
+            trackingSection.innerHTML = `<p style="text-align: center; color: #6b7280;">No approved orders to track at the moment.</p>`;
+            return;
+        }
+        orders.forEach(order => {
+            const orderCard = document.createElement('div');
+            orderCard.className = 'tracking-order-card';
+            orderCard.dataset.orderDbId = order.id;
+            orderCard.dataset.orderPublicId = order.orderId;
+            // MODIFIED: Updated text, class, and used the new formatting function.
+            orderCard.innerHTML = `
+                <div class="tracking-header">
+                    <div>
+                        <h2 class="tracking-order-id">${order.orderId}</h2>
+                        <p class="tracking-customer-name">Customer: ${order.customerName}</p>
+                        <p class="tracking-timestamp">Created order time: ${formatOrderTimestamp(order.createdAt)}</p>
+                    </div>
+                    <div class="tracking-actions">
+                        <select class="stage-select">
+                            ${STAGES.map(stage => `<option value="${stage}" ${order.currentStage === stage ? 'selected' : ''}>${stage}</option>`).join('')}
+                        </select>
+                        <button class="next-stage-btn">Next Stage</button>
+                    </div>
+                </div>
+                <div class="progress-tracker-container">
+                    ${STAGES.map(stage => `
+                        <div class="progress-step" data-stage="${stage}">
+                            <div class="status-icon">
+                                <i data-lucide="${STAGE_ICONS[stage]}" style="width:20px; height:20px;"></i>
+                            </div>
+                            <p class="status-text">${stage}</p>
+                        </div>`).join('')}
+                </div>`;
+            trackingSection.appendChild(orderCard);
+            updateTrackerUI(orderCard, order.currentStage);
+        });
+        lucide.createIcons();
+    };
+
+    const updateOrderStatusAPI = async (orderDbId, newStage) => {
+        console.log(`🚀 API Request: Updating order ${orderDbId} to "${newStage}"...`);
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/tracking/orders/${orderDbId}/tracking-stage`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tracking_stage: newStage })
+            });
+            if (!res.ok) throw new Error('API update failed');
+            console.log('✅ API Update Successful');
+            return true;
+        } catch (error) {
+            console.error('❌ API Update Failed:', error);
+            return false;
+        }
+    };
+    
+    // --- EVENT LISTENERS ---
+    trackingSection.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('next-stage-btn')) {
+            const button = event.target;
+            const orderCard = button.closest('.tracking-order-card');
+            const orderDbId = orderCard.dataset.orderDbId;
+            const order = orders.find(o => o.id == orderDbId);
+            const currentStageIndex = STAGES.indexOf(order.currentStage);
+            
+            if (currentStageIndex < STAGES.indexOf('On Delivery')) {
+                const newStage = STAGES[currentStageIndex + 1];
+                button.disabled = true;
+                const success = await updateOrderStatusAPI(order.id, newStage);
+                if (success) {
+                    order.currentStage = newStage;
+                    updateTrackerUI(orderCard, newStage);
+                    showTrackingToast(`Order ${order.orderId} moved to ${newStage}.`);
+                } else {
+                    showTrackingToast(`Failed to update ${order.orderId}.`);
+                    button.disabled = false;
+                }
+            }
+        }
+    });
+
+    trackingSection.addEventListener('change', async (event) => {
+        if (event.target.classList.contains('stage-select')) {
+            const dropdown = event.target;
+            const newStage = dropdown.value;
+            const orderCard = dropdown.closest('.tracking-order-card');
+            const orderDbId = orderCard.dataset.orderDbId;
+            const order = orders.find(o => o.id == orderDbId);
+
+            if (newStage === 'Delivered') {
+                showTrackingToast("'Delivered' status can only be set by the customer.");
+                dropdown.value = order.currentStage;
+                return;
+            }
+
+            if (order.currentStage !== newStage) {
+                dropdown.disabled = true;
+                const success = await updateOrderStatusAPI(order.id, newStage);
+                if (success) {
+                    order.currentStage = newStage;
+                    updateTrackerUI(orderCard, newStage);
+                    showTrackingToast(`Order ${order.orderId} updated to ${newStage}.`);
+                } else {
+                    showTrackingToast(`Failed to update ${order.orderId}.`);
+                    dropdown.value = order.currentStage;
+                }
+                dropdown.disabled = newStage === 'Delivered';
+            }
+        }
+    });
+
+    // --- INITIALIZATION ---
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if(!response.ok) throw new Error('Failed to fetch orders for tracking.');
+        const allOrders = await response.json();
+        
+        orders = allOrders
+            .filter(o => o.status === 'Approved')
+            .map(order => ({
+                id: order.id,
+                orderId: order.order_id,
+                customerName: order.delivery_name ?? order.user?.name ?? 'Unknown',
+                currentStage: order.tracking_stage || 'Approved',
+                createdAt: order.created_at
+            }));
+        renderOrders();
+    } catch (error) {
+        console.error("Error initializing tracking section:", error);
+        trackingSection.innerHTML = `<p style="text-align: center; color: red;">Could not load tracking data.</p>`;
+    }
+}
   </script>
 </body>
 </html>
