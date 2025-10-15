@@ -1,14 +1,65 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EASEPrint Admin Dashboard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Other libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Your Custom Stylesheet (Last) -->
+  <link rel="stylesheet" href="style.css" />
+
   <style>
+    /* --- FONT FIXES START --- */
+    
+    /* 1. Restore the original font for the entire app */
+    body {
+        font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* 2. Apply the new 'Inter' font ONLY to the transactions section */
+    #transactions {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* 3. Explicitly re-style headings that were reset by Tailwind */
+    .sidebar h2 {
+        color: #FBB3C8;
+        text-align: center;
+        margin: 0 0 30px 0;
+        padding: 0 20px;
+        font-size: 1.5rem;
+        font-weight: 700; /* Restore bold weight */
+    }
+    
+    .main > div:not(#transactions) h1,
+    .main > div:not(#transactions) h2,
+    .main > div:not(#transactions) h3 {
+        font-weight: 700; 
+        color: #3F1A2B;  
+    }
+    .main > div:not(#transactions) h1 {
+        font-size: 2rem;
+        border-bottom: 2px solid #FBB3C8;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .main > div:not(#transactions) h2 {
+        font-size: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    /* --- FONT FIXES END --- */
+
     .hidden { display: none; }
     #editModal {
       display: none;
@@ -26,8 +77,12 @@
       max-width: 400px;
       width: 100%;
     }
-    img { max-width: 100%; }
 
+    .main > div:not(#transactions) {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    img { max-width: 100%; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     table, th, td { border: 1px solid #ccc; }
     th, td { padding: 10px; text-align: left; }
@@ -220,9 +275,7 @@
   </thead>
   <tbody></tbody>
 </table>
-
-    
-    </div>
+</div>
 
 
 
@@ -234,63 +287,126 @@
 </div>
 
 
- <div id="transactions" class="hidden"><h1>Record Manual Transaction</h1>
-  
-  <input id="item" placeholder="Item Name" />
-  <input id="price" placeholder="Unit Price" type="number" />
-  <input id="qty" placeholder="Quantity" type="number" />
+ <div id="transactions" class="hidden">
+        <div>
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Sales & Transactions</h1>
+                <p class="text-gray-500 mt-1">Manually record sales and view the complete transaction history.</p>
+            </header>
 
-  <select id="orderStatus">
-    <option value="Pending">Pending</option>
-    <option value="Successful">Successful</option>
-  </select>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Record a New Sale</h3>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <label for="item" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                            <input type="text" id="item" placeholder="e.g., Custom Jersey Print" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                        </div>
 
-  <select id="paymentStatus">
-    <option value="Pending">Pending</option>
-    <option value="Done">Done</option>
-  </select>
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
+                                <input type="number" id="price" placeholder="0.00" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                            </div>
+                            <div class="flex-1">
+                                <label for="qty" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" id="qty" placeholder="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                            </div>
+                        </div>
 
-  <button onclick="submitTransaction()">Submit</button>
-  <div id="response"></div>
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="orderStatus" class="block text-sm font-medium text-gray-700 mb-1">Order Status</label>
+                                <select id="orderStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Successful">Successful</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label for="paymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                                <select id="paymentStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                            </div>
+                        </div>
 
-<h2>Transactions List</h2>
-<table border="1" style="width: 100%">
-  <thead>
-    <tr>
-      <th>Date</th> <th>Item Name</th>
-      <th>Unit Price</th>
-      <th>Quantity</th>
-      <th>Order Status</th>
-      <th>Payment Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody id="transactionsList"></tbody>
-</table>
+                        <button onclick="submitTransaction()" class="w-full bg-[#ED4A69] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#d4435d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ED4A69] transition-transform transform hover:scale-105">
+                            <i class="fas fa-plus-circle mr-2"></i> Add Transaction
+                        </button>
+                        <div id="response" class="text-center mt-2"></div>
+                    </div>
+                </div>
 
-</div>
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-md">
+                    <div class="p-6 border-b">
+                        <h3 class="text-xl font-semibold text-gray-900">Sales History</h3>
+                    </div>
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-sm text-left text-gray-500" style="border: none;">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0" style="border: none;">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Date</th>
+                                    <th scope="col" class="px-6 py-3">Item Name</th>
+                                    <th scope="col" class="px-6 py-3 text-right">Unit Price</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Quantity</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Order Status</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Payment Status</th>
+                                    <th scope="col" class="px-6 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div id="transactionModal" class="modal hidden" style="
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  background: white; padding: 20px; border: 1px solid #ccc; z-index: 1000;
-">
-  <h3>Edit Transaction</h3>
-  <input id="editTransactionId" type="hidden" />
-  <input id="editItem" placeholder="Item Name" />
-  <input id="editPrice" placeholder="Unit Price" type="number" />
-  <input id="editQty" placeholder="Quantity" type="number" />
-  <select id="editOrderStatus">
-    <option value="Pending">Pending</option>
-    <option value="Successful">Successful</option>
-  </select>
-  <select id="editPaymentStatus">
-    <option value="Pending">Pending</option>
-    <option value="Done">Done</option>
-  </select>
-  <br><br>
-  <button onclick="saveEdit()">Save</button>
-  <button onclick="closeTransactionModal()">Cancel</button>
-</div>
+    <div id="transactionModal" class="hidden">
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+        <h3 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Edit Transaction</h3>
+        <input id="editTransactionId" type="hidden" />
+        <div class="space-y-5">
+            <div>
+                <label for="editItem" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                <input type="text" id="editItem" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label for="editPrice" class="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
+                    <input type="number" id="editPrice" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                </div>
+                <div class="flex-1">
+                    <label for="editQty" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input type="number" id="editQty" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                </div>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label for="editOrderStatus" class="block text-sm font-medium text-gray-700 mb-1">Order Status</label>
+                    <select id="editOrderStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                        <option value="Pending">Pending</option>
+                        <option value="Successful">Successful</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="editPaymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                    <select id="editPaymentStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                        <option value="Pending">Pending</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-4">
+                <button onclick="closeTransactionModal()" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                <button onclick="saveEdit()" class="px-6 py-2 bg-[#ED4A69] text-white rounded-lg hover:bg-[#d4435d] transition">Save Changes</button>
+            </div>
+        </div>
+      </div>
+    </div>
 
 
 
@@ -904,173 +1020,166 @@ if ('Notification' in window && Notification.permission !== 'granted') {
 
 let selectedTransactionId = null;
 
-  // 🟢 Load Transactions on Page Load
+// TRANSACTIONS SYSTEM
  fetchTransactions();
 
 async function fetchTransactions() {
-  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const transactions = await res.json();
-  const list = document.getElementById('transactionsList');
-  list.innerHTML = '';
+  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const transactions = await res.json();
+  const list = document.getElementById('transactionsList');
+  list.innerHTML = '';
 
-  transactions.forEach(tx => {
-      const date = new Date(tx.created_at).toLocaleString('en-PH', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', hour12: true
-    });
+  transactions.forEach(tx => {
+    const date = new Date(tx.created_at).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: 'numeric', hour12: true
+    });
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${date}</td> <td>${tx.item_name}</td>
-      <td>${tx.unit_price}</td>
-      <td>${tx.quantity}</td>
-      <td>${tx.order_status}</td>
-      <td>${tx.payment_status}</td>
-      <td>
-        <button onclick="openEditModal(${tx.id}, '${tx.item_name}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')">✏️ Edit</button>
-        <button onclick="deleteTransaction(${tx.id})">🗑️ Delete</button>
-      </td>
-    `;
-    list.appendChild(row);
-  });
+    const itemNameEscaped = tx.item_name.replace(/'/g, "\\'");
 
-  
-  
+    const row = document.createElement('tr');
+    row.className = "bg-white border-b hover:bg-gray-50";
+    row.style.border = "none";
+
+    row.innerHTML = `
+        <td class="px-6 py-4 text-gray-900 whitespace-nowrap" style="border:none">${date}</td>
+        <td class="px-6 py-4 font-medium text-gray-900" style="border:none">${tx.item_name}</td>
+        <td class="px-6 py-4 text-right" style="border:none">₱${parseFloat(tx.unit_price).toFixed(2)}</td>
+        <td class="px-6 py-4 text-center" style="border:none">${tx.quantity}</td>
+        <td class="px-6 py-4 text-center" style="border:none">
+            <span class="status-pill ${tx.order_status === 'Successful' ? 'status-successful' : 'status-pending'}">${tx.order_status}</span>
+        </td>
+        <td class="px-6 py-4 text-center" style="border:none">
+            <span class="status-pill ${tx.payment_status === 'Done' ? 'status-done' : 'status-pending'}">${tx.payment_status}</span>
+        </td>
+        <td class="px-6 py-4 text-right" style="border:none">
+            <button onclick="openEditModal(${tx.id}, '${itemNameEscaped}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')" class="text-[#ED4A69] hover:text-[#c13b56]"><i class="fas fa-edit fa-fw"></i></button>
+            <button onclick="deleteTransaction(${tx.id})" class="text-red-600 hover:text-red-900 ml-2"><i class="fas fa-trash fa-fw"></i></button>
+        </td>
+    `;
+    list.appendChild(row);
+  });
 }
-
-// New Transaction Submit
 
 async function submitTransaction() {
-  const item = document.getElementById("item").value;
-  const price = parseFloat(document.getElementById("price").value);
-  const qty = parseInt(document.getElementById("qty").value);
-  const orderStatus = document.getElementById("orderStatus").value;
-  const paymentStatus = document.getElementById("paymentStatus").value;
+  const item = document.getElementById("item").value;
+  const price = parseFloat(document.getElementById("price").value);
+  const qty = parseInt(document.getElementById("qty").value);
+  const orderStatus = document.getElementById("orderStatus").value;
+  const paymentStatus = document.getElementById("paymentStatus").value;
 
-  const responseDiv = document.getElementById("response");
+  const responseDiv = document.getElementById("response");
 
-  try {
-      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-      body: JSON.stringify({
-        item_name: item,
-        unit_price: price,
-        quantity: qty,
-        order_status: orderStatus,
-        payment_status: paymentStatus
-      })
-    });
+  try {
+      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
 
-    const data = await res.json();
-    responseDiv.innerText = data.message || 'Transaction added!';
-    responseDiv.style.color = "green";
+    const data = await res.json();
+    responseDiv.innerText = data.message || 'Transaction added!';
+    responseDiv.style.color = "green";
 
-    // Reset inputs
-    document.getElementById("item").value = '';
-    document.getElementById("price").value = '';
-    document.getElementById("qty").value = '';
-    document.getElementById("orderStatus").value = 'Pending';
-    document.getElementById("paymentStatus").value = 'Pending';
+    document.getElementById("item").value = '';
+    document.getElementById("price").value = '';
+    document.getElementById("qty").value = '';
+    document.getElementById("orderStatus").value = 'Pending';
+    document.getElementById("paymentStatus").value = 'Pending';
 
-    fetchTransactions();
-  } catch (err) {
-    responseDiv.innerText = 'Error saving transaction.';
-    responseDiv.style.color = "red";
-    console.error(err);
-  }
-  
-
+    fetchTransactions();
+  } catch (err) {
+    responseDiv.innerText = 'Error saving transaction.';
+    responseDiv.style.color = "red";
+    console.error(err);
+  }
 }
 
-
-
-// Open Edit Modal
 function openEditModal(id, item_name, unit_price, quantity, order_status, payment_status) {
-  selectedTransactionId = id;
-  document.getElementById('editTransactionId').value = id;
-  document.getElementById('editItem').value = item_name;
-  document.getElementById('editPrice').value = unit_price;
-  document.getElementById('editQty').value = quantity;
-  document.getElementById('editOrderStatus').value = order_status;
-  document.getElementById('editPaymentStatus').value = payment_status;
-  document.getElementById('transactionModal').classList.remove('hidden');
+  selectedTransactionId = id;
+  document.getElementById('editTransactionId').value = id;
+  document.getElementById('editItem').value = item_name;
+  document.getElementById('editPrice').value = unit_price;
+  document.getElementById('editQty').value = quantity;
+  document.getElementById('editOrderStatus').value = order_status;
+  document.getElementById('editPaymentStatus').value = payment_status;
+  const modal = document.getElementById('transactionModal');
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
 }
 
-// Close Edit Modal
 function closeTransactionModal() {
-  document.getElementById('transactionModal').classList.add('hidden');
+  const modal = document.getElementById('transactionModal');
+  modal.classList.add('hidden');
+  modal.style.display = 'none';
 }
 
-// Save Edit
 async function saveEdit() {
-  const id = document.getElementById('editTransactionId').value;
-  const item = document.getElementById('editItem').value;
-  const price = parseFloat(document.getElementById('editPrice').value);
-  const qty = parseInt(document.getElementById('editQty').value);
-  const orderStatus = document.getElementById('editOrderStatus').value;
-  const paymentStatus = document.getElementById('editPaymentStatus').value;
+  const id = document.getElementById('editTransactionId').value;
+  const item = document.getElementById('editItem').value;
+  const price = parseFloat(document.getElementById('editPrice').value);
+  const qty = parseInt(document.getElementById('editQty').value);
+  const orderStatus = document.getElementById('editOrderStatus').value;
+  const paymentStatus = document.getElementById('editPaymentStatus').value;
 
-  try {
-    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-      body: JSON.stringify({
-        item_name: item,
-        unit_price: price,
-        quantity: qty,
-        order_status: orderStatus,
-        payment_status: paymentStatus
-      })
-    });
+  try {
+    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
 
-    closeTransactionModal();
-    fetchTransactions();
-  } catch (err) {
-    console.error("Update failed:", err);
-  }
+    closeTransactionModal();
+    fetchTransactions();
+  } catch (err) {
+    console.error("Update failed:", err);
+  }
 }
 
 async function deleteTransaction(id) {
-  if (!confirm("Are you sure you want to delete this transaction?")) return;
+  if (!confirm("Are you sure you want to delete this transaction?")) return;
 
-  try {
-    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-    if (!res.ok) {
-      throw new Error('Failed to delete transaction');
-    }
+    if (!res.ok) {
+      throw new Error('Failed to delete transaction');
+    }
 
-    // Reset the input fields manually after a successful deletion
-    document.getElementById("item").value = '';
-    document.getElementById("price").value = '';
-    document.getElementById("qty").value = '';
-    document.getElementById("orderStatus").value = 'Pending';
-    document.getElementById("paymentStatus").value = 'Pending';
-    document.getElementById("response").innerText = 'Transaction deleted successfully!';
-    document.getElementById("response").style.color = 'green';
-    
-    // Refresh the list
-    fetchTransactions();
-  } catch (err) {
-    console.error("Delete error:", err);
-    alert("Error deleting transaction: " + err.message);
-  }
+    document.getElementById("response").innerText = 'Transaction deleted successfully!';
+    document.getElementById("response").style.color = 'green';
+    
+    fetchTransactions();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Error deleting transaction: " + err.message);
+  }
 }
 
-
-
+// TOP SALES SECTION
 async function fetchTopSales() {
   try {
     const res = await fetch('http://127.0.0.1:8000/api/top-sales');
@@ -1627,8 +1736,6 @@ async function deleteOrder(orderId) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchOrders();
 });
-
-
 
 
 
