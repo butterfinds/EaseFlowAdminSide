@@ -14,6 +14,8 @@
   <!-- Other libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- ICONS UPDATE: Added Feather Icons for the new UI -->
+  <script src="https://unpkg.com/feather-icons"></script>
 
   <!-- Your Custom Stylesheet (Last) -->
   <link rel="stylesheet" href="style.css" />
@@ -26,12 +28,12 @@
         font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* 2. Apply the new 'Inter' font ONLY to the transactions section */
-    #transactions {
+    /* 2. APPLY THE NEW 'INTER' FONT TO ALL UPDATED UI SECTIONS */
+    #transactions, #appointments, #orders {
         font-family: 'Inter', sans-serif;
     }
 
-    /* 3. Explicitly re-style headings that were reset by Tailwind */
+    /* 3. EXPLICITLY RE-STYLE HEADINGS THAT WERE RESET BY TAILWIND */
     .sidebar h2 {
         color: #FBB3C8;
         text-align: center;
@@ -41,24 +43,33 @@
         font-weight: 700; /* Restore bold weight */
     }
     
-    .main > div:not(#transactions) h1,
-    .main > div:not(#transactions) h2,
-    .main > div:not(#transactions) h3 {
+    /* UPDATE: EXCLUDE NEW UI SECTIONS FROM OLD HEADING STYLES */
+    .main > div:not(#transactions):not(#appointments):not(#orders) h1,
+    .main > div:not(#transactions):not(#appointments):not(#orders) h2,
+    .main > div:not(#transactions):not(#appointments):not(#orders) h3 {
         font-weight: 700; 
         color: #3F1A2B;  
     }
-    .main > div:not(#transactions) h1 {
+    /* UPDATE: EXCLUDE NEW UI SECTIONS FROM OLD HEADING STYLES */
+    .main > div:not(#transactions):not(#appointments):not(#orders) h1 {
         font-size: 2rem;
         border-bottom: 2px solid #FBB3C8;
         padding-bottom: 10px;
         margin-bottom: 20px;
     }
-    .main > div:not(#transactions) h2 {
+    .main > div:not(#transactions):not(#appointments):not(#orders) h2 {
         font-size: 1.5rem;
         margin-top: 1.5rem;
         margin-bottom: 1rem;
     }
     /* --- FONT FIXES END --- */
+
+    /* ORDERS TABLE EDITED */
+    #orders table th, #orders table td,
+    #appointments table th, #appointments table td {
+      border: 2vh;
+      padding: 3vh; 
+    }
 
     .hidden { display: none; }
     #editModal {
@@ -78,11 +89,12 @@
       width: 100%;
     }
 
-    .main > div:not(#transactions) {
+    .main > div:not(#transactions):not(#appointments):not(#orders) {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     img { max-width: 100%; }
+    /* UI UPDATE: OLD TABLE STYLES KEPT FOR SECTIONS THAT STILL USE THEM */
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     table, th, td { border: 1px solid #ccc; }
     th, td { padding: 10px; text-align: left; }
@@ -116,6 +128,23 @@
     .toast-active {
         animation: fadeInOut 3s forwards;
     }
+    
+    /* UI UPDATE: Added custom scrollbar style from the new design */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -135,7 +164,10 @@
   </ul>
 </div>
 
-  <div class="main">
+<!-- ================================================================== -->
+<!-- ====================   DASHBOARD SECTION      ==================== -->
+<!-- ================================================================== -->
+<div class="main">
     <div id="home">
       <h1>Dashboard</h1>
       <p>Overview of orders, sales, and top products.</p>
@@ -149,9 +181,16 @@
     <canvas id="topSalesChart" width="400" height="400"></canvas>
   </div>
 </div>
+</div>
+<!-- ================================================================== -->
+<!-- ==================== END OF DASHBOARD SECTION ==================== -->
+<!-- ================================================================== -->
 
-    </div>
 
+
+<!-- ================================================================== -->
+<!-- ====================   PRODUCTS SECTION       ==================== -->
+<!-- ================================================================== -->
     <div id="products" class="hidden">
       <h1>Product Upload</h1>
       <form id="productForm">
@@ -189,104 +228,189 @@
         <tbody></tbody>
       </table>
     </div>
+<!-- ================================================================== -->
+<!-- ==================== END OF PRODUCTS SECTION  ==================== -->
+<!-- ================================================================== -->
 
+
+
+<!-- ================================================================== -->
+<!-- ====================    ORDERS SECTION        ==================== -->
+<!-- ================================================================== -->
 <div id="orders" class="hidden">
-  <h1>Orders</h1>
+    <div class="w-full p-4 sm:p-6 lg:p-8" style="padding: 0; max-width: 100%;">
+        <!-- PAGE HEADER UPDATED: PINK LINE REMOVED -->
+        <header class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Orders</h1>
+        </header>
 
-  <button class="refresh-btn" onclick="fetchOrders()">
-    <i class="fas fa-sync-alt"></i> Refresh
-  </button>
+        <!-- CONTROLS -->
+        <div class="mb-6">
+             <button onclick="fetchOrders()" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                <i data-feather="refresh-cw" class="w-4 h-4"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
 
-  <table id="ordersTable" border="1" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th>Order ID</th>
-        <th>User</th>
-        <th>Phone</th>
-        <th>Total</th>
-        <th>Items</th>
-        <th>Status</th>
-        <th>Date</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="8">Loading orders...</td></tr>
-    </tbody>
-  </table>
+        <!-- ORDERS TABLE CARD -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div>
+                <table id="ordersTable" class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- THIS WILL BE POPULATED BY THE UPDATED fetchOrders() FUNCTION -->
+                         <tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ================================================================== -->
+<!-- =======================END OF ORDER SECTION======================= -->
+<!-- ================================================================== -->
+
+
+
+<!-- ================================================================== -->
+<!-- ======================= APPOINTMENT SECTION ====================== -->
+<!-- ================================================================== -->
+
+<div id="appointments" class="hidden">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8" style="padding: 0; max-width: 100%;">
+        <!-- PAGE HEADER UPDATED: PINK LINE REMOVED -->
+        <header class="mb-8">
+             <h1 class="text-3xl font-bold text-gray-900">Appointments</h1>
+            <p class="text-gray-500 mt-2">Manage custom requests and scheduled appointments.</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="flex flex-col gap-8">
+
+            <!-- Custom Shirt Requests Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6">
+                    <!-- Card Header with Theme Line -->
+                    <div class="border-b-2 border-pink-500 pb-4 mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-2 sm:mb-0">Custom Shirt Requests</h2>
+                            <div class="flex items-center space-x-2">
+                                <label for="statusFilter" class="text-sm font-medium">Show:</label>
+                                <!-- ID is kept as "statusFilter" to match your existing JS -->
+                                <select id="statusFilter" onchange="fetchRequests()" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                    <option>All</option>
+                                    <option>Pending</option>
+                                    <option>Approved</option>
+                                    <option>Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requests Table -->
+                    <div>
+                        <!-- Table ID and tbody ID are kept to match your existing JS -->
+                        <table id="requestsTable" class="w-full divide-y divide-gray-200" style="border: none;">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Design / Specs</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Note</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestsBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="text-center py-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Schedule Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6">
+                    <!-- Card Header with Theme Line -->
+                    <div class="border-b-2 border-pink-500 pb-4 mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-2 sm:mb-0">Appointments Schedule</h2>
+                            <div class="flex items-center space-x-2">
+                                <label for="appointmentsStatusFilter" class="text-sm font-medium">Filter:</label>
+                                <!-- ID is kept as "appointmentsStatusFilter" to match your existing JS -->
+                                <select id="appointmentsStatusFilter" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                    <option value="">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                                <!-- ID is kept as "appointmentsReloadBtn" to match your existing JS -->
+                                <button id="appointmentsReloadBtn" class="p-2 rounded-md hover:bg-gray-100 active:bg-gray-200">
+                                    <i data-feather="refresh-cw" class="w-4 h-4 text-gray-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule Table -->
+                    <!-- Table ID is kept as "appointmentsTbl" to match your existing JS -->
+                    <table id="appointmentsTbl" class="w-full divide-y divide-gray-200" style="border: none;">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- This will be populated by your loadAppointments() function -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-
-  <div id="appointments" class="hidden"><h1>Appointments</h1>
-  <h1>Custom Shirt Requests</h1>
-
-  <div class="filter-box">
-    <label for="statusFilter">Show: </label>
-    <select id="statusFilter" onchange="fetchRequests()">
-      <option value="All">All</option>
-      <option value="Pending">Pending</option>
-      <option value="Approved">Approved</option>
-      <option value="Rejected">Rejected</option>
-    </select>
-  </div>
-
-  <table id="requestsTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Full Name</th>
-        <th>Phone</th>
-        <th>Email</th>
-        <th>Design</th>
-        <th>Size</th>
-        <th>Quantity</th>
-        <th>Notes</th>
-        <th>Status</th>
-        <th>Admin Note</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="requestsBody">
-      <tr><td colspan="11">Loading...</td></tr>
-    </tbody>
-  </table>
-
-
-<h2>Appointments Schedule</h2>
-<div class="controls">
-  <label>
-    Filter:
-    <select id="appointmentsStatusFilter">
-      <option value="">All</option>
-      <option value="pending">Pending</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
-    </select>
-  </label>
-  <button id="appointmentsReloadBtn">Reload</button>
-</div>
-
-<table id="appointmentsTbl">
-  <thead>
-    <tr>
-      <th>ID</th><th>Name</th><th>Phone</th><th>Email</th>
-      <th>Date</th><th>Status</th><th>QR</th><th>PDF</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-</div>
+<!-- ================================================================== -->
+<!-- ================ END OF APPOINTMENT SECTION ====================== -->
+<!-- ================================================================== -->
 
 
 
-
+<!-- ================================================================== -->
+<!-- ================     TRACKING SECTION       ====================== -->
+<!-- ================================================================== -->
 <div id="tracking" class="hidden">
     <h1>Order Tracking</h1>
     <div id="tracking-section">
-        </div>
+    </div>
 </div>
+<!-- ================================================================== -->
+<!-- ================  END OF TRACKING SECTION   ====================== -->
+<!-- ================================================================== -->
 
 
+
+<!-- ================================================================== -->
+<!-- ================     TRANSACTION SECTION    ====================== -->
+<!-- ================================================================== -->
  <div id="transactions" class="hidden">
         <div>
             <header class="mb-8">
@@ -407,10 +531,16 @@
         </div>
       </div>
     </div>
+<!-- ================================================================== -->
+<!-- ================ END OF TRANSACTION SECTION ====================== -->
+<!-- ================================================================== -->
 
 
 
-    <div id="analytics" class="hidden">
+<!-- ================================================================== -->
+<!-- ================       ANALYTICS SECTION    ====================== -->
+<!-- ================================================================== -->
+<div id="analytics" class="hidden">
       <h1>Analytics</h1>
       
     <div>
@@ -429,7 +559,15 @@
     <canvas id="salesBarChart" width="600" height="300" style="margin-top:20px;"></canvas>
   </div>
   </div>
-    
+
+<!-- ================================================================== -->
+<!-- =======================END OF ANALYTICS SECTION ================== -->
+<!-- ================================================================== -->
+
+
+<!-- ================================================================== -->
+<!-- ================         CHAT SECTION       ====================== -->
+<!-- ================================================================== -->
   <div id="chat" class="hidden">
     <div class="chat-header">
       <h1 id="chatTitle">Customer Support Chat</h1>
@@ -453,12 +591,17 @@
       <button id="sendMsgBtn" onclick="sendMessage()">Send</button>
     </div>
   </div>
+<!-- ================================================================== -->
+<!-- ================  END OF CHAT SECTION       ====================== -->
+<!-- ================================================================== -->
+
 
   <div id="settings" class="hidden">
     <h1>Account Settings</h1>
     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
   </div>
+
 
   <div id="editModal">
     <form id="editForm" enctype="multipart/form-data">
@@ -484,11 +627,16 @@
     if (!token) window.location.href = './index.html';
 
     function showSection(id) {
-      document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      if (id === 'products') loadProducts();
-      if (id === 'transactions') fetchTransactions();
-      if (id === 'tracking') initializeTracking();
+        document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        if (id === 'products') loadProducts();
+        if (id === 'orders') fetchOrders();
+        if (id === 'transactions') fetchTransactions();
+        if (id === 'tracking') initializeTracking();
+        // UI UPDATE: INITIALIZE FEATHER ICONS FOR NEW UI SECTIONS
+        if (id === 'appointments' || id === 'orders') {
+            feather.replace();
+        }
     }
 
     function logout() {
@@ -1021,29 +1169,29 @@ if ('Notification' in window && Notification.permission !== 'granted') {
 let selectedTransactionId = null;
 
 // TRANSACTIONS SYSTEM
- fetchTransactions();
+  fetchTransactions();
 
 async function fetchTransactions() {
-  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const transactions = await res.json();
-  const list = document.getElementById('transactionsList');
-  list.innerHTML = '';
+  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const transactions = await res.json();
+  const list = document.getElementById('transactionsList');
+  list.innerHTML = '';
 
-  transactions.forEach(tx => {
-    const date = new Date(tx.created_at).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-      hour: 'numeric', minute: 'numeric', hour12: true
-    });
+  transactions.forEach(tx => {
+    const date = new Date(tx.created_at).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: 'numeric', hour12: true
+    });
 
     const itemNameEscaped = tx.item_name.replace(/'/g, "\\'");
 
-    const row = document.createElement('tr');
+    const row = document.createElement('tr');
     row.className = "bg-white border-b hover:bg-gray-50";
     row.style.border = "none";
 
-    row.innerHTML = `
+    row.innerHTML = `
         <td class="px-6 py-4 text-gray-900 whitespace-nowrap" style="border:none">${date}</td>
         <td class="px-6 py-4 font-medium text-gray-900" style="border:none">${tx.item_name}</td>
         <td class="px-6 py-4 text-right" style="border:none">₱${parseFloat(tx.unit_price).toFixed(2)}</td>
@@ -1058,125 +1206,125 @@ async function fetchTransactions() {
             <button onclick="openEditModal(${tx.id}, '${itemNameEscaped}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')" class="text-[#ED4A69] hover:text-[#c13b56]"><i class="fas fa-edit fa-fw"></i></button>
             <button onclick="deleteTransaction(${tx.id})" class="text-red-600 hover:text-red-900 ml-2"><i class="fas fa-trash fa-fw"></i></button>
         </td>
-    `;
-    list.appendChild(row);
-  });
+    `;
+    list.appendChild(row);
+  });
 }
 
 async function submitTransaction() {
-  const item = document.getElementById("item").value;
-  const price = parseFloat(document.getElementById("price").value);
-  const qty = parseInt(document.getElementById("qty").value);
-  const orderStatus = document.getElementById("orderStatus").value;
-  const paymentStatus = document.getElementById("paymentStatus").value;
+  const item = document.getElementById("item").value;
+  const price = parseFloat(document.getElementById("price").value);
+  const qty = parseInt(document.getElementById("qty").value);
+  const orderStatus = document.getElementById("orderStatus").value;
+  const paymentStatus = document.getElementById("paymentStatus").value;
 
-  const responseDiv = document.getElementById("response");
+  const responseDiv = document.getElementById("response");
 
-  try {
-      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-      body: JSON.stringify({
-        item_name: item,
-        unit_price: price,
-        quantity: qty,
-        order_status: orderStatus,
-        payment_status: paymentStatus
-      })
-    });
+  try {
+      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
 
-    const data = await res.json();
-    responseDiv.innerText = data.message || 'Transaction added!';
-    responseDiv.style.color = "green";
+    const data = await res.json();
+    responseDiv.innerText = data.message || 'Transaction added!';
+    responseDiv.style.color = "green";
 
-    document.getElementById("item").value = '';
-    document.getElementById("price").value = '';
-    document.getElementById("qty").value = '';
-    document.getElementById("orderStatus").value = 'Pending';
-    document.getElementById("paymentStatus").value = 'Pending';
+    document.getElementById("item").value = '';
+    document.getElementById("price").value = '';
+    document.getElementById("qty").value = '';
+    document.getElementById("orderStatus").value = 'Pending';
+    document.getElementById("paymentStatus").value = 'Pending';
 
-    fetchTransactions();
-  } catch (err) {
-    responseDiv.innerText = 'Error saving transaction.';
-    responseDiv.style.color = "red";
-    console.error(err);
-  }
+    fetchTransactions();
+  } catch (err) {
+    responseDiv.innerText = 'Error saving transaction.';
+    responseDiv.style.color = "red";
+    console.error(err);
+  }
 }
 
 function openEditModal(id, item_name, unit_price, quantity, order_status, payment_status) {
-  selectedTransactionId = id;
-  document.getElementById('editTransactionId').value = id;
-  document.getElementById('editItem').value = item_name;
-  document.getElementById('editPrice').value = unit_price;
-  document.getElementById('editQty').value = quantity;
-  document.getElementById('editOrderStatus').value = order_status;
-  document.getElementById('editPaymentStatus').value = payment_status;
-  const modal = document.getElementById('transactionModal');
+  selectedTransactionId = id;
+  document.getElementById('editTransactionId').value = id;
+  document.getElementById('editItem').value = item_name;
+  document.getElementById('editPrice').value = unit_price;
+  document.getElementById('editQty').value = quantity;
+  document.getElementById('editOrderStatus').value = order_status;
+  document.getElementById('editPaymentStatus').value = payment_status;
+  const modal = document.getElementById('transactionModal');
   modal.classList.remove('hidden');
   modal.style.display = 'flex';
 }
 
 function closeTransactionModal() {
-  const modal = document.getElementById('transactionModal');
+  const modal = document.getElementById('transactionModal');
   modal.classList.add('hidden');
   modal.style.display = 'none';
 }
 
 async function saveEdit() {
-  const id = document.getElementById('editTransactionId').value;
-  const item = document.getElementById('editItem').value;
-  const price = parseFloat(document.getElementById('editPrice').value);
-  const qty = parseInt(document.getElementById('editQty').value);
-  const orderStatus = document.getElementById('editOrderStatus').value;
-  const paymentStatus = document.getElementById('editPaymentStatus').value;
+  const id = document.getElementById('editTransactionId').value;
+  const item = document.getElementById('editItem').value;
+  const price = parseFloat(document.getElementById('editPrice').value);
+  const qty = parseInt(document.getElementById('editQty').value);
+  const orderStatus = document.getElementById('editOrderStatus').value;
+  const paymentStatus = document.getElementById('editPaymentStatus').value;
 
-  try {
-    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-      body: JSON.stringify({
-        item_name: item,
-        unit_price: price,
-        quantity: qty,
-        order_status: orderStatus,
-        payment_status: paymentStatus
-      })
-    });
+  try {
+    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+      body: JSON.stringify({
+        item_name: item,
+        unit_price: price,
+        quantity: qty,
+        order_status: orderStatus,
+        payment_status: paymentStatus
+      })
+    });
 
-    closeTransactionModal();
-    fetchTransactions();
-  } catch (err) {
-    console.error("Update failed:", err);
-  }
+    closeTransactionModal();
+    fetchTransactions();
+  } catch (err) {
+    console.error("Update failed:", err);
+  }
 }
 
 async function deleteTransaction(id) {
-  if (!confirm("Are you sure you want to delete this transaction?")) return;
+  if (!confirm("Are you sure you want to delete this transaction?")) return;
 
-  try {
-    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-    if (!res.ok) {
-      throw new Error('Failed to delete transaction');
-    }
+    if (!res.ok) {
+      throw new Error('Failed to delete transaction');
+    }
 
-    document.getElementById("response").innerText = 'Transaction deleted successfully!';
-    document.getElementById("response").style.color = 'green';
-    
-    fetchTransactions();
-  } catch (err) {
-    console.error("Delete error:", err);
-    alert("Error deleting transaction: " + err.message);
-  }
+    document.getElementById("response").innerText = 'Transaction deleted successfully!';
+    document.getElementById("response").style.color = 'green';
+    
+    fetchTransactions();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Error deleting transaction: " + err.message);
+  }
 }
 
 // TOP SALES SECTION
@@ -1349,34 +1497,61 @@ document.addEventListener('DOMContentLoaded', renderSalesTrendsCharts);
           : data.filter(req => req.status === filterValue);
 
         if (filteredData.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="11">No ${filterValue} requests found.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6">No ${filterValue} requests found.</td></tr>`;
           return;
         }
 
         filteredData.forEach(req => {
-          const row = document.createElement("tr");
-          row.className = req.status.toLowerCase();
+            // UI UPDATE: This section is heavily modified to fit the new table structure.
+            const row = document.createElement("tr");
+            
+            // Status Badge Logic
+            let statusBadge = '';
+            switch(req.status.toLowerCase()) {
+                case 'approved':
+                    statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>`;
+                    break;
+                case 'rejected':
+                    statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>`;
+                    break;
+                default:
+                    statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>`;
+            }
 
-          row.innerHTML = `
-            <td>${req.id}</td>
-            <td>${req.full_name}</td>
-            <td>${req.phone}</td>
-            <td>${req.email}</td>
-            <td>${req.design ? `<a href="http://localhost:8000/storage/${req.design}" target="_blank">View</a>` : 'No Design'}</td>
-            <td>${req.size}</td>
-            <td>${req.quantity}</td>
-            <td>${req.notes || ''}</td>
-            <td>${req.status}</td>
-            <td><textarea id="note-${req.id}">${req.admin_note || ''}</textarea></td>
-            <td>
-              ${req.status === "Pending" ? `
-                <button onclick="approveRequest(${req.id})">Approve</button>
-                <button onclick="rejectRequest(${req.id})">Reject</button>
-              ` : '—'}
-            </td>
-          `;
-          tbody.appendChild(row);
+            // Action Buttons Logic
+            let actionButtons = '—'; // Default for non-pending
+            if (req.status === 'Pending') {
+                actionButtons = `
+                    <button onclick="approveRequest(${req.id})" class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Approve</button>
+                    <button onclick="rejectRequest(${req.id})" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Reject</button>
+                `;
+            }
+
+            row.innerHTML = `
+                <td class="px-6 py-6 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${req.full_name}</div>
+                    <div class="text-sm text-gray-500">${req.email}</div>
+                    <div class="text-sm text-gray-500">${req.phone}</div>
+                </td>
+                <td class="px-6 py-6 whitespace-nowrap">
+                    <div class="flex items-center text-sm">
+                        ${req.design ? `<a href="http://localhost:8000/storage/${req.design}" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><i data-feather="eye" class="w-4 h-4"></i> View</a>` : '<span>No Design</span>'}
+                        <span class="mx-2 text-gray-300">|</span>
+                        <div>Size: <span class="font-semibold">${req.size}</span></div>
+                        <span class="mx-2 text-gray-300">|</span>
+                        <div>Qty: <span class="font-semibold">${req.quantity}</span></div>
+                    </div>
+                </td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-600 max-w-xs truncate">${req.notes || ''}</td>
+                <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-6 whitespace-nowrap">
+                    <input type="text" id="note-${req.id}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Add a note..." value="${req.admin_note || ''}">
+                </td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-x-2">${actionButtons}</td>
+            `;
+            tbody.appendChild(row);
         });
+        feather.replace(); // Re-initialize icons after drawing table
       } catch (err) {
         console.error("Error fetching requests:", err);
       }
@@ -1429,21 +1604,52 @@ async function loadAppointments() {
   const items = json.data || json;
   appointmentsTbody.innerHTML = '';
 
+  if (items.length === 0) {
+      appointmentsTbody.innerHTML = `<tr><td colspan="6" class="text-center py-6">No appointments found.</td></tr>`;
+      return;
+  }
+
   items.forEach(a => {
+    // UI UPDATE: This section is heavily modified to fit the new table structure.
     const tr = document.createElement('tr');
+
+    // Status Badge Logic
+    let statusBadge = '';
+    switch(a.status.toLowerCase()) {
+        case 'approved':
+            statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>`;
+            break;
+        case 'rejected':
+            statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>`;
+            break;
+        default:
+            statusBadge = `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Pending</span>`;
+    }
+
+    // Action Buttons Logic
+    let actionButtons = '—'; // Default for non-pending
+    if (a.status === 'pending') {
+        actionButtons = `
+            <button onclick="approveAppointment(${a.id})" class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Approve</button>
+            <button onclick="rejectAppointment(${a.id})" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Reject</button>
+        `;
+    }
+
     tr.innerHTML = `
-      <td>${a.id}</td>
-      <td>${a.full_name}</td>
-      <td>${a.phone}</td>
-      <td>${a.email}</td>
-      <td>${a.schedule_date}</td>
-      <td><span class="badge ${a.status}">${a.status}</span></td>
-      <td>${a.qr_code_path ? `<a href="${fileUrl(a.qr_code_path)}" target="_blank">QR</a>` : ''}</td>
-      <td>${a.pdf_path ? `<a href="${fileUrl(a.pdf_path)}" target="_blank">PDF</a>` : ''}</td>
-      <td>
-        <button onclick="approveAppointment(${a.id})" ${a.status!=='pending' ? 'disabled' : ''}>Approve</button>
-        <button onclick="rejectAppointment(${a.id})" ${a.status!=='pending' ? 'disabled' : ''}>Reject</button>
-      </td>
+        <td class="px-6 py-6 whitespace-nowrap text-sm font-medium text-gray-900">${a.full_name}</td>
+        <td class="px-6 py-6 whitespace-nowrap">
+            <div class="text-sm text-gray-500">${a.email}</div>
+            <div class="text-sm text-gray-500">${a.phone}</div>
+        </td>
+        <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${new Date(a.schedule_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+        <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
+        <td class="px-6 py-6 whitespace-nowrap text-sm font-medium">
+           <div class="flex items-center space-x-3">
+                ${a.qr_code_path ? `<a href="${fileUrl(a.qr_code_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">QR</a>` : ''}
+                ${a.pdf_path ? `<a href="${fileUrl(a.pdf_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">PDF</a>` : ''}
+           </div>
+        </td>
+        <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-x-2">${actionButtons}</td>
     `;
     appointmentsTbody.appendChild(tr);
   });
@@ -1452,7 +1658,7 @@ async function loadAppointments() {
 async function approveAppointment(id) {
   try {
     const response = await fetch(`http://127.0.0.1:8000/api/appointments/${id}/approve`, {
-      method: 'PUT',   // ✅ match Laravel route
+      method: 'PUT',    // ✅ match Laravel route
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -1492,244 +1698,247 @@ async function rejectAppointment(id) {
   loadAppointments();
 }
 
+// <!-- ================================================================== -->
+// <!-- ====================      ORDERS SCRIPT     ====================== -->
+// <!-- ================================================================== -->
+
 // Orders
 async function fetchOrders() {
-  const ordersTableBody = document.querySelector('#ordersTable tbody');
-  ordersTableBody.innerHTML = '<tr><td colspan="8">Loading orders...</td></tr>';
+    const ordersTableBody = document.querySelector('#ordersTable tbody');
+    ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>';
 
-  try {
-    const token = localStorage.getItem('adminToken'); 
-    const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-    const data = await response.json();
-    console.log("Fetched orders:", data);
+        const data = await response.json();
+        console.log("Fetched orders:", data);
 
-    if (data.length === 0) {
-      ordersTableBody.innerHTML = '<tr><td colspan="8">No orders found.</td></tr>';
-      return;
-    }
-
-    ordersTableBody.innerHTML = '';
-    data.forEach(order => {
-      // Status colors
-      let statusColor;
-      switch (order.status) {
-        case 'Approved': statusColor = 'green'; break;
-        case 'Rejected': statusColor = 'red'; break;
-        default: statusColor = 'orange'; // Pending
-      }
-
-      // Format created_at
-      const createdAt = new Date(order.created_at).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      // Format items
-      const items = order.items.map(i => `${i.product.name} x${i.quantity}`).join('<br>');
-
-      // Actions
-      let actions = '';
-      const normalizedStatus = (order.status || '').toLowerCase();
-
-      if (normalizedStatus === 'pending') {
-        actions += `
-          <button onclick="updateOrderStatus(${order.id}, 'Approved')" 
-            class="order-action-btn approve">
-            <i class="fas fa-check"></i> Approve
-          </button>
-          <button onclick="updateOrderStatus(${order.id}, 'Rejected')" 
-            class="order-action-btn reject">
-            <i class="fas fa-times"></i> Reject
-          </button>
-        `;
-      } else if (normalizedStatus === 'approved' || normalizedStatus === 'rejected') {
-        const statusClass = normalizedStatus === 'approved' ? 'approved' : 'rejected';
-        actions += `
-          <select onchange="handleEditStatus(${order.id}, this.value)" 
-            class="order-status-dropdown ${statusClass}">
-            <option value="">✏ Edit Status</option>
-            <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>
-              ✔ Approved
-            </option>
-            <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>
-              ✖ Rejected
-            </option>
-          </select>
-        `;
-      }
-
-      // Delete button
-      actions += `
-        <button onclick="deleteOrder(${order.id})" 
-          class="order-action-btn delete">
-          <i class="fas fa-trash"></i> Delete
-        </button>
-      `;
-
-      // Row with copy button
-      const row = `
-        <tr>
-            <td style="padding: 6px 10px; white-space: nowrap;">
-              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span>${order.order_id}</span>
-                <button 
-                  onclick="copyOrderId('${order.order_id}', this)"
-                  style="display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; padding: 0; padding-right: 8px;"
-                  title="Copy Order ID"
-                  onmouseover="this.querySelector('i').style.color='#000'"
-                  onmouseout="this.querySelector('i').style.color='#666'"
-                >
-                  <i class="fas fa-clipboard" style="color: #666; font-size: 15px; transition: color 0.2s;"></i>
-                  <span style="font-size: 12px; color: black; opacity: 0.7; line-height: 1;">Copy ID</span>
-                </button>
-              </div>
-            </td>
-          <td>${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
-          <td>${order.delivery_phone ?? 'N/A'}</td>
-          <td>${order.total}</td>
-          <td>${items}</td>
-          <td><span style="color: ${statusColor}; font-weight: bold;">${order.status}</span></td>
-          <td>${createdAt}</td>
-          <td>${actions}</td>
-        </tr>
-      `;
-      ordersTableBody.insertAdjacentHTML('beforeend', row);
-    });
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    ordersTableBody.innerHTML = '<tr><td colspan="8">Error loading orders.</td></tr>';
-  }
-}
-
-// Copy Order ID to clipboard
-function copyOrderId(orderId, btn) {
-  navigator.clipboard.writeText(orderId)
-    .then(() => {
-      showToast(`Order ID ${orderId} copied`, "success");
-      
-      const icon = btn.querySelector('i');
-      const originalClass = icon.className;
-      icon.className = 'fas fa-check';
-      icon.style.color = '#4CAF50';
-
-      setTimeout(() => {
-        icon.className = originalClass;
-        icon.style.color = '#888';
-      }, 1000);
-    })
-    .catch(err => {
-      console.error("Failed to copy Order ID:", err);
-      showToast("Failed to copy Order ID", "error");
-    });
-}
-
-// Toast function
-function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
-
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.classList.add("show"), 100);
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// Update order status
-async function updateOrderStatus(orderId, status) {
-  try {
-    const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({ status })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const order = data.order;
-
-      showToast(`Order ${order.order_id} marked as ${status}`, "success");
-
-      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
-      if (order.delivery_phone) {
-        try {
-          window.electronAPI.sendSMS(order.delivery_phone, message);
-          console.log(`SMS sent to ${order.delivery_phone}`);
-        } catch (smsError) {
-          console.error('Failed to send SMS:', smsError);
+        if (data.length === 0) {
+            ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">No orders found.</td></tr>';
+            return;
         }
-      } else {
-        console.warn('No phone number found for this order.');
-      }
 
-      fetchOrders();
-    } else {
-      console.error("Failed to update order status");
-      showToast("Error updating order status", "error");
+        ordersTableBody.innerHTML = '';
+        data.forEach(order => {
+            // STATUS BADGE LOGIC
+            let statusBadge;
+            switch (order.status) {
+                case 'Approved':
+                    statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>`;
+                    break;
+                case 'Rejected':
+                    statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>`;
+                    break;
+                default:
+                    statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>`;
+            }
+
+            // FORMAT CREATED_AT DATE
+            const createdAt = new Date(order.created_at).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // FORMAT ITEMS
+            const items = order.items.map(i => `${i.product.name} x${i.quantity}`).join('<br>');
+
+            // ACTIONS LOGIC
+            let actions = '';
+            const normalizedStatus = (order.status || '').toLowerCase();
+
+              if (normalizedStatus === 'pending') {
+                  // UI UPDATE: BIGGER BUTTONS WITH ICONS
+                  actions += `
+                      <button onclick="updateOrderStatus(${order.id}, 'Approved')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                          <i data-feather="check" class="w-4 h-4"></i> Approve
+                      </button>
+                      <button onclick="updateOrderStatus(${order.id}, 'Rejected')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-gray-500 rounded-lg hover:bg-gray-600">
+                          <i data-feather="x" class="w-4 h-4"></i> Reject
+                      </button>
+                  `;
+              } else {
+                  // UI UPDATE: DROPDOWN SAME SIZE AS BUTTONS
+                  actions += `
+                      <div class="relative inline-flex items-center">
+                          <i data-feather="${order.status === 'Approved' ? 'check' : 'x'}" class="absolute left-4 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
+                          <select onchange="handleEditStatus(${order.id}, this.value)" 
+                              class="appearance-none pl-10 pr-10 py-3 text-xs font-medium rounded-lg border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 
+                              ${order.status === 'Approved' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-red-100 text-red-800 font-semibold'}">
+                              <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>Approved</option>
+                              <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                          </select>
+                          <i data-feather="chevron-down" class="absolute right-3 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
+                      </div>
+                  `;
+              }
+
+            // UI UPDATE: BIGGER DELETE BUTTON
+            actions += `
+                <button onclick="deleteOrder(${order.id})" class="inline-flex items-center justify-center p-3 text-gray-500 bg-gray-100 rounded-lg hover:bg-red-100 hover:text-red-600" title="Delete">
+                     <i data-feather="trash-2" class="w-4 h-4"></i>
+                </button>
+            `;
+
+            // NEW ROW STRUCTURE
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-6 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900">${order.order_id}</span>
+                        <button onclick="copyOrderId('${order.order_id}', this)" class="ml-3 text-gray-400 hover:text-blue-600" title="Copy ID">
+                            <i data-feather="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-800">${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${order.delivery_phone ?? 'N/A'}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 font-semibold">₱${order.total}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${items}</td>
+                <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${createdAt}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-x-2">${actions}</td>
+            `;
+            ordersTableBody.appendChild(row);
+        });
+        
+        // RE-INITIALIZE FEATHER ICONS AFTER ROWS ARE ADDED
+        feather.replace();
+
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">Error loading orders.</td></tr>';
     }
-  } catch (error) {
-    if (error.response) {
-      console.error("API response error:", error.response);
-    } else if (error.request) {
-      console.error("No response from API:", error.request);
-    } else {
-      console.error("Error in request setup:", error.message);
-    }
-    showToast("Something went wrong while updating status.", "error");
-  }
 }
 
-// Handle edit dropdown
+
+// UPDATED COPY FUNCTION FOR FEATHER ICONS
+function copyOrderId(orderId, btn) {
+    navigator.clipboard.writeText(orderId)
+        .then(() => {
+            showToast(`Order ID ${orderId} copied`, "success");
+            
+            const originalIconHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-feather="check" class="w-4 h-4 text-green-500"></i>`;
+            feather.replace(); // Render the new 'check' icon
+
+            setTimeout(() => {
+                btn.innerHTML = originalIconHTML;
+                feather.replace(); // Render the original 'copy' icon
+            }, 1500);
+        })
+        .catch(err => {
+            console.error("Failed to copy Order ID:", err);
+            showToast("Failed to copy Order ID", "error");
+        });
+}
+
+// THIS IS YOUR EXISTING TOAST FUNCTION, UNCHANGED
+function showToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("show"), 100);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// THIS IS YOUR EXISTING UPDATEORDERSTATUS FUNCTION, UNCHANGED
+async function updateOrderStatus(orderId, status) {
+  try {
+    const token = localStorage.getItem('adminToken'); 
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ status })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const order = data.order;
+
+      showToast(`Order ${order.order_id} marked as ${status}`, "success");
+
+      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
+      if (order.delivery_phone) {
+        try {
+          window.electronAPI.sendSMS(order.delivery_phone, message);
+          console.log(`SMS sent to ${order.delivery_phone}`);
+        } catch (smsError) {
+          console.error('Failed to send SMS:', smsError);
+        }
+      } else {
+        console.warn('No phone number found for this order.');
+      }
+
+      fetchOrders();
+    } else {
+      console.error("Failed to update order status");
+      showToast("Error updating order status", "error");
+    }
+  } catch (error) {
+    if (error.response) {
+      console.error("API response error:", error.response);
+    } else if (error.request) {
+      console.error("No response from API:", error.request);
+    } else {
+      console.error("Error in request setup:", error.message);
+    }
+    showToast("Something went wrong while updating status.", "error");
+  }
+}
+
+// THIS IS YOUR EXISTING HANDLEEDITSTATUS FUNCTION, UNCHANGED
 function handleEditStatus(orderId, newStatus) {
-  if (!newStatus) return;
-  updateOrderStatus(orderId, newStatus);
+  if (!newStatus) return;
+  updateOrderStatus(orderId, newStatus);
 }
 
-// Delete order
+// THIS IS YOUR EXISTING DELETEORDER FUNCTION, UNCHANGED
 async function deleteOrder(orderId) {
-  // Grab the order_id from the table row for nicer message
-  const row = document.querySelector(`#ordersTable tbody tr button[onclick="deleteOrder(${orderId})"]`)?.closest('tr');
-  const orderCode = row?.querySelector('td span')?.textContent || orderId;
+  // Grab the order_id from the table row for nicer message
+  const row = document.querySelector(`#ordersTable tbody tr button[onclick="deleteOrder(${orderId})"]`)?.closest('tr');
+  const orderCode = row?.querySelector('td span')?.textContent || orderId;
 
-  if (!confirm(`Are you sure you want to delete Order ${orderCode}?`)) return;
+  if (!confirm(`Are you sure you want to delete Order ${orderCode}?`)) return;
 
-  try {
-    const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-    });
+  try {
+    const token = localStorage.getItem('adminToken'); 
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+    });
 
-    if (response.ok) {
-      showToast(`Order ${orderCode} has been deleted`, "success");
-      fetchOrders();
-    } else {
-      console.error("Failed to delete order");
-      showToast("Error deleting order", "error");
-    }
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    showToast("Something went wrong while deleting the order", "error");
-  }
+    if (response.ok) {
+      showToast(`Order ${orderCode} has been deleted`, "success");
+      fetchOrders();
+    } else {
+      console.error("Failed to delete order");
+      showToast("Error deleting order", "error");
+    }
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    showToast("Something went wrong while deleting the order", "error");
+  }
 }
 
 // Auto-load
@@ -2001,3 +2210,4 @@ async function initializeTracking() {
   </script>
 </body>
 </html>
+

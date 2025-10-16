@@ -890,207 +890,51 @@ td:last-child {
         50% { transform: scale(1.15); }
     }
 
-/* --- PURE CSS FOR TRANSACTIONS SECTION --- */
-#transactions {
-    padding: 30px; /* Match main content padding */
-    font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif; /* Use base font */
-}
-.txn-header h1 {
-    font-size: 2rem; /* Match main h1 */
-    font-weight: 700;
-    color: #3F1A2B; /* Match main h1 color */
-    border-bottom: 2px solid #FBB3C8; /* Match main h1 border */
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-.txn-header p {
-    color: #6b7280;
-    margin-top: -15px; /* Adjust position */
-    margin-bottom: 20px;
-}
-.txn-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    align-items: flex-start;
-}
-@media (min-width: 1024px) {
-    .txn-grid {
-        grid-template-columns: 350px 1fr; /* Fixed form, flexible table */
+    /* --- TRANSACTIONS SYSTEM UI --- */
+    #transactions {
+        padding: 32px;
     }
-}
-.txn-form-card, .txn-table-card {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 10px; /* Match other form radius */
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); /* Match other form shadow */
-}
-
-.txn-card-header {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.75rem;
-    margin-bottom: 1.5rem;
-    margin-top: 0;
-}
-.txn-form-group {
-    margin-bottom: 1.25rem;
-}
-.txn-form-group:last-child {
-    margin-bottom: 0;
-}
-.txn-form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 4px;
-}
-.txn-form-input, .txn-form-select {
-    width: 100%;
-    padding: 12px; /* Match other form inputs */
-    border: 1px solid #d1d5db;
-    border-radius: 6px; /* Match other form inputs */
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-sizing: border-box;
-}
-.txn-form-input:focus, .txn-form-select:focus {
-    outline: none;
-    border-color: #ED4A69;
-    box-shadow: 0 0 0 2px rgba(237, 74, 105, 0.4);
-}
-.txn-form-row {
-    display: flex;
-    gap: 1rem;
-}
-.txn-form-row > div {
-    flex: 1;
-}
-.txn-submit-btn {
-    width: 100%;
-    background-color: #ED4A69;
-    color: white;
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-}
-.txn-submit-btn:hover {
-    background-color: #d4435d;
-    transform: scale(1.02);
-}
-.txn-table-container {
-    max-height: 600px;
-    overflow-y: auto;
-}
-.txn-table {
-    width: 100%;
-    font-size: 0.875rem;
-    border: none;
-    margin-top: 0;
-    border-collapse: collapse;
-}
-.txn-table thead {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    background-color: #f9fafb;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-.txn-table th, .txn-table td {
-    padding: 0.75rem 1.5rem;
-    border-bottom: 1px solid #eee;
-    text-align: left;
-}
-.txn-table tbody tr:hover {
-    background-color: #fcf5f7; /* Match other table hover */
-}
-.txn-table .text-right { text-align: right; }
-.txn-table .text-center { text-align: center; }
-
-.status-pill {
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: inline-block;
-}
-.status-successful, .status-done {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-.status-pending {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-.txn-action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #007bff; /* Match original edit-btn color */
-    margin: 0 0.25rem;
-    padding: 5px;
-}
- .txn-action-btn:hover {
-    color: #0056b3;
-}
-.txn-delete-btn {
-    color: #dc3545; /* Match original delete-btn color */
-}
-.txn-delete-btn:hover {
-    color: #a71d2a;
-}
-
-#transactionModal {
-    display: none;
-    position: fixed;
-    z-index: 1001; /* Above sidebar */
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-}
-.txn-modal-content {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px; /* Match other modals */
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); /* Match other modals */
-    width: 100%;
-    max-width: 28rem;
-}
-.txn-modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding-top: 1rem;
-}
-.txn-modal-btn {
-    padding: 10px 15px; /* Match other modal buttons */
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-weight: 500;
-}
-.txn-btn-cancel {
-    background-color: #6c757d; /* Match other modal buttons */
-    color: white;
-}
-.txn-btn-cancel:hover {
-    background-color: #5a6268;
-}
-.txn-btn-save {
-    background-color: #ED4A69;
-    color: white;
-}
-.txn-btn-save:hover {
-    background-color: #d4435d;
-}
+     .status-pill {
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    .status-successful, .status-done {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+    }
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+     /* Edit Modal Style */
+    #transactionModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+    }
