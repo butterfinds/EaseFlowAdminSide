@@ -14,8 +14,12 @@
   <!-- Other libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- ICONS UPDATE: Added Feather Icons for the new UI -->
   <script src="https://unpkg.com/feather-icons"></script>
+
+  <!-- PDF Generation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 
   <!-- Your Custom Stylesheet (Last) -->
   <link rel="stylesheet" href="style.css" />
@@ -29,7 +33,7 @@
     }
 
     /* 2. APPLY THE NEW 'INTER' FONT TO ALL UPDATED UI SECTIONS */
-    #transactions, #appointments, #orders {
+    #home, #transactions, #appointments, #orders, #products {
         font-family: 'Inter', sans-serif;
     }
 
@@ -40,36 +44,42 @@
         margin: 0 0 30px 0;
         padding: 0 20px;
         font-size: 1.5rem;
-        font-weight: 700; /* Restore bold weight */
+        font-weight: 700;
     }
     
     /* UPDATE: EXCLUDE NEW UI SECTIONS FROM OLD HEADING STYLES */
-    .main > div:not(#transactions):not(#appointments):not(#orders) h1,
-    .main > div:not(#transactions):not(#appointments):not(#orders) h2,
-    .main > div:not(#transactions):not(#appointments):not(#orders) h3 {
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) h1,
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) h2,
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) h3 {
         font-weight: 700; 
         color: #3F1A2B;  
     }
     /* UPDATE: EXCLUDE NEW UI SECTIONS FROM OLD HEADING STYLES */
-    .main > div:not(#transactions):not(#appointments):not(#orders) h1 {
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) h1 {
         font-size: 2rem;
         border-bottom: 2px solid #FBB3C8;
         padding-bottom: 10px;
         margin-bottom: 20px;
     }
-    .main > div:not(#transactions):not(#appointments):not(#orders) h2 {
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) h2 {
         font-size: 1.5rem;
         margin-top: 1.5rem;
         margin-bottom: 1rem;
     }
     /* --- FONT FIXES END --- */
 
-    /* ORDERS TABLE EDITED */
+    /* UPDATE: ADDED #products TO THIS RULE TO FIX TABLE SPACING */
     #orders table th, #orders table td,
-    #appointments table th, #appointments table td {
-      border: 2vh;
-      padding: 3vh; 
+    #products table th, #products table td {
+        border: 2vh;
+        padding: 3vh;               
     }
+
+    #appointments table th, #appointments table td{
+        border: 1px solid #ebced7; 
+        padding: 16px;        
+    }
+
 
     .hidden { display: none; }
     #editModal {
@@ -89,7 +99,7 @@
       width: 100%;
     }
 
-    .main > div:not(#transactions):not(#appointments):not(#orders) {
+    .main > div:not(#home):not(#transactions):not(#appointments):not(#orders):not(#products) {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
@@ -145,8 +155,29 @@
         background: #94a3b8;
     }
 
+    /* UI UPDATE: ADDED CUSTOM STYLES FOR FILE INPUT FROM DRAFT */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        cursor: pointer;
+    }
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .file-input-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Datalabels Plugin for displaying labels on the chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -164,70 +195,203 @@
   </ul>
 </div>
 
-<!-- ================================================================== -->
-<!-- ====================   DASHBOARD SECTION      ==================== -->
-<!-- ================================================================== -->
 <div class="main">
+    <!-- ================================================================== -->
+    <!-- ====================  DASHBOARD SECTION  ==================== -->
+    <!-- ================================================================== -->
     <div id="home">
-      <h1>Dashboard</h1>
-      <p>Overview of orders, sales, and top products.</p>
+     <div class="p-4 sm:p-6 lg:p-8">
+        <!-- Dashboard Header -->
+        <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+                <p class="mt-1 text-slate-500">Track, manage, and analyze your sales data with ease.</p>
+            </div>
+             <div class="flex items-center space-x-4">
+                <div id="live-clock" class="text-lg font-semibold text-slate-600"></div>
+                <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                    <button onclick="showSection('transactions')" class="font-semibold text-sm bg-[#EF534F] text-white py-2 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EF534F] transition">
+                        + Add Sale
+                    </button>
+                </div>
+            </div>
+        </header>
 
-<div id="topSalesSection" class="hidden">
-  <h2><i class="fas fa-trophy"></i> Top Sales</h2>
-  <ul id="topSalesList"></ul>
+        <!-- Stat Cards Widget Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Stat Card 1: Total Revenue -->
+            <div class="widget glass-effect text-white">
+                <p class="font-medium">Total Revenue</p>
+                <p id="total-revenue" class="text-4xl font-bold mt-2">₱0.00</p>
+                <div class="flex items-center text-sm mt-2 text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>
+                    <span>Calculating...</span>
+                </div>
+            </div>
+            <!-- Stat Card 2: Total Sales -->
+            <div class="widget">
+                <p class="font-medium text-slate-500">Total Sales</p>
+                <p id="total-sales" class="text-4xl font-bold text-slate-800 mt-2">0</p>
+                 <div class="flex items-center text-sm mt-2 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>
+                    <span>Calculating...</span>
+                </div>
+            </div>
+            <!-- Stat Card 3: Pending Orders -->
+            <div class="widget">
+                <p class="font-medium text-slate-500">Pending Orders</p>
+                <p id="pending-orders" class="text-4xl font-bold text-slate-800 mt-2">0</p>
+                 <div class="flex items-center text-sm mt-2 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>
+                    <span>Awaiting processing</span>
+                </div>
+            </div>
+            <!-- Stat Card 4: Mini Calendar -->
+            <div class="widget">
+                 <div id="calendar-widget">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 id="calendar-month-year" class="text-sm font-semibold text-slate-800"></h2>
+                        <div class="flex space-x-1">
+                            <button id="prev-month" class="p-1 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#EF534F]">
+                                <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <button id="next-month" class="p-1 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#EF534F]">
+                                <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-y-1 text-center text-xs"></div>
+                </div>
+            </div>
+        </div>
 
-  <div id="topSalesChartSection">
-    <h2><i class="fas fa-chart-pie"></i> Top Sales Pie Chart</h2>
-    <canvas id="topSalesChart" width="400" height="400"></canvas>
-  </div>
-</div>
+        <!-- Main content grid -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- WIDGET: Recent Activity -->
+            <div class="widget lg:col-span-2">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Activity</h2>
+                <ul id="activity-feed" class="divide-y divide-slate-100">
+                    <!-- Activity items will be dynamically inserted here -->
+                     <li class="flex items-center justify-center text-slate-500 py-10">Loading activities...</li>
+                </ul>
+            </div>
+
+            <!-- NEW WIDGET: Sales Overview (Chart + Legend) -->
+            <div class="widget lg:col-span-2">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Overview</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="relative h-48 w-48 mx-auto">
+                        <canvas id="salesDonutChart"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
+                            <div>
+                                <span id="total-sales-value" class="text-3xl font-bold text-slate-800"></span>
+                                <span class="text-sm text-slate-500 block">Total Items Sold</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sales-legend" class="space-y-2">
+                        <!-- Legend items will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- WIDGET: Sales Volume (Bar Chart) -->
+            <div class="widget lg:col-span-4">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Volume</h2>
+                <div class="h-64">
+                    <canvas id="salesBarChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 <!-- ================================================================== -->
 <!-- ==================== END OF DASHBOARD SECTION ==================== -->
 <!-- ================================================================== -->
 
-
-
 <!-- ================================================================== -->
-<!-- ====================   PRODUCTS SECTION       ==================== -->
+<!-- =================== PRODUCTS SECTION  ==================== -->
 <!-- ================================================================== -->
-    <div id="products" class="hidden">
-      <h1>Product Upload</h1>
-      <form id="productForm">
-        <input type="text" id="productName" placeholder="Product Name" required>
-        <input type="number" id="productPrice" placeholder="Price" required>
-        <input type="number" id="productStock" placeholder="Stock" required>
-        <textarea id="productDescription" placeholder="Description"></textarea>
-        <input type="file" id="productImage" required>
+<div id="products" class="hidden">
+    <div class="p-4 sm:p-6 lg:p-8" style="padding: 0; max-width: 100%;">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Product Upload</h1>
+            <p class="text-gray-500 mt-2">Manage your product listings by adding new items or editing existing ones.</p>
+        </header>
 
-        <select id="productCategory" required>
-          <option value="">Select Category</option>
-          <option value="1">Jerseys</option>
-          <option value="2">Shirts</option>
-          <option value="3">Shorts</option>
-          <option value="4">Jackets</option>
-          <option value="5">Others</option>
-        </select>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md overflow-y-auto max-h-[calc(100vh-10rem)]"> 
+                <h3 class="text-xl font-semibold text-gray-900 border-b pb-4 mb-6">Add New Product</h3>
+                <form id="productForm" class="space-y-5">
+                    <div>
+                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <input type="text" id="productName" placeholder="e.g., Custom Jersey" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                            <input type="number" id="productPrice" placeholder="0.00" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition" required>
+                        </div>
+                        <div>
+                            <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                            <input type="number" id="productStock" placeholder="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="productDescription" rows="4" placeholder="Enter product details..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition"></textarea>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                        <div class="file-input-wrapper w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            <input type="file" id="productImage" required>
+                            <div class="file-input-button text-gray-500">
+                               <i data-feather="upload" class="w-4 h-4"></i>
+                                <span id="fileName">Choose file</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select id="productCategory" class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition" required>
+                            <option value="">Select Category</option>
+                            <option value="1">Jerseys</option>
+                            <option value="2">Shirts</option>
+                            <option value="3">Shorts</option>
+                            <option value="4">Jackets</option>
+                            <option value="5">Others</option>
+                        </select>
+                    </div>
+                        <button type="submit" class="w-full bg-[#ED4A69] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#d4435d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ED4A69] transition-transform transform hover:scale-105">
+                            <i class="fas fa-plus-circle mr-2"></i> Upload Product
+                        </button>
+                </form>
+            </div>
 
-        <button type="submit">Upload</button>
-      </form>
-
-
-      <h2>Uploaded Products</h2>
-      <table id="productTable" border="1">
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+                 <div class="p-6 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900">Uploaded Products</h3>
+                </div>
+                <div class="overflow-x-auto"> <table id="productTable" class="min-w-full"> <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                           </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 <!-- ================================================================== -->
 <!-- ==================== END OF PRODUCTS SECTION  ==================== -->
 <!-- ================================================================== -->
@@ -235,16 +399,14 @@
 
 
 <!-- ================================================================== -->
-<!-- ====================    ORDERS SECTION        ==================== -->
+<!-- ====================   ORDERS SECTION      ==================== -->
 <!-- ================================================================== -->
 <div id="orders" class="hidden">
     <div class="w-full p-4 sm:p-6 lg:p-8" style="padding: 0; max-width: 100%;">
-        <!-- PAGE HEADER UPDATED: PINK LINE REMOVED -->
         <header class="mb-6">
             <h1 class="text-3xl font-bold text-gray-900">Orders</h1>
         </header>
 
-        <!-- CONTROLS -->
         <div class="mb-6">
              <button onclick="fetchOrders()" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
                 <i data-feather="refresh-cw" class="w-4 h-4"></i>
@@ -252,10 +414,9 @@
             </button>
         </div>
 
-        <!-- ORDERS TABLE CARD -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div>
-                <table id="ordersTable" class="w-full">
+            <div class="overflow-x-auto">
+                <table id="ordersTable" class="min-w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
@@ -269,8 +430,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- THIS WILL BE POPULATED BY THE UPDATED fetchOrders() FUNCTION -->
-                         <tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>
+                        <tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -383,11 +543,9 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
-
 <!-- ================================================================== -->
 <!-- ================ END OF APPOINTMENT SECTION ====================== -->
 <!-- ================================================================== -->
@@ -395,7 +553,7 @@
 
 
 <!-- ================================================================== -->
-<!-- ================     TRACKING SECTION       ====================== -->
+<!-- ================   TRACKING SECTION      ====================== -->
 <!-- ================================================================== -->
 <div id="tracking" class="hidden">
     <h1>Order Tracking</h1>
@@ -409,7 +567,7 @@
 
 
 <!-- ================================================================== -->
-<!-- ================     TRANSACTION SECTION    ====================== -->
+<!-- ================   TRANSACTION SECTION    ====================== -->
 <!-- ================================================================== -->
  <div id="transactions" class="hidden">
         <div>
@@ -538,7 +696,7 @@
 
 
 <!-- ================================================================== -->
-<!-- ================       ANALYTICS SECTION    ====================== -->
+<!-- ================   ANALYTICS SECTION       ====================== -->
 <!-- ================================================================== -->
 <div id="analytics" class="hidden">
       <h1>Analytics</h1>
@@ -566,7 +724,7 @@
 
 
 <!-- ================================================================== -->
-<!-- ================         CHAT SECTION       ====================== -->
+<!-- ================       CHAT SECTION         ====================== -->
 <!-- ================================================================== -->
   <div id="chat" class="hidden">
     <div class="chat-header">
@@ -629,12 +787,13 @@
     function showSection(id) {
         document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
+        if (id === 'home') updateDashboard();
         if (id === 'products') loadProducts();
         if (id === 'orders') fetchOrders();
         if (id === 'transactions') fetchTransactions();
         if (id === 'tracking') initializeTracking();
         // UI UPDATE: INITIALIZE FEATHER ICONS FOR NEW UI SECTIONS
-        if (id === 'appointments' || id === 'orders') {
+        if (id === 'appointments' || id === 'orders' || id === 'products' || id === 'tracking') {
             feather.replace();
         }
     }
@@ -644,6 +803,10 @@
       localStorage.removeItem('adminEmail');
       window.location.href = './index.html';
     }
+
+// <!-- ================================================================== -->
+// <!-- ==================== PRODUCT SCRIPT UPDATED ====================== -->
+// <!-- ================================================================== -->
 
 // Product Upload
 document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -671,6 +834,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
 
     // Reset form and reload
     e.target.reset();
+    document.getElementById('fileName').textContent = 'Choose file'; // RESET FILENAME SPAN
     loadProducts();
 
     // Show success toast
@@ -703,34 +867,41 @@ loadCategories();
 
 
 async function loadProducts() {
-  const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const products = await res.json();
-  const tbody = document.querySelector('#productTable tbody');
-  tbody.innerHTML = '';
+    const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const products = await res.json();
+    const tbody = document.querySelector('#productTable tbody');
+    tbody.innerHTML = '';
 
-  products.forEach(p => {
-    const imageSrc = p.image_url || 'placeholder.png'; // fallback if no image
-    const row = `
-      <tr>
-        <td><img src="${imageSrc}" width="50" /></td>
-        <td>${p.name}</td>
-        <td>${p.price}</td>
-        <td>${p.stock}</td>
-        <td>${p.description}</td>
-        <td>
-          <button class="edit-btn" onclick="editProduct(${p.id})">
-            <i class="fas fa-edit"></i> Edit
-          </button>
-          <button class="delete-btn" onclick="deleteProduct(${p.id})">
-            <i class="fas fa-trash"></i> Delete
-          </button>
-        </td>
-      </tr>
-    `;
-    tbody.insertAdjacentHTML('beforeend', row);
-  });
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6">No products uploaded yet.</td></tr>';
+        return;
+    }
+
+    products.forEach(p => {
+        const imageSrc = p.image_url || 'https://placehold.co/100x100/e2e8f0/334155?text=No+Img';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-6 py-4">
+                <img class="h-12 w-12 object-cover rounded-md" src="${imageSrc}" alt="Product Image">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">₱${p.price}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.stock}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">${p.description}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <button onclick="editProduct(${p.id})" class="inline-flex items-center gap-2 px-4 py-3 text-xs font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">
+                    <i data-feather="edit-2" class="w-4 h-4"></i> Edit
+                </button>
+                <button onclick="deleteProduct(${p.id})" class="inline-flex items-center gap-2 px-4 py-3 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                    <i data-feather="trash-2" class="w-4 h-4"></i> Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    feather.replace(); // INITIALIZE ICONS
 }
 
     function editProduct(id) {
@@ -819,6 +990,23 @@ async function deleteProduct(id) {
     alert('Delete failed: ' + err.message);
   }
 }
+
+// SCRIPT TO DISPLAY THE CHOSEN FILE NAME
+const fileInput = document.getElementById('productImage');
+const fileNameSpan = document.getElementById('fileName');
+if (fileInput) {
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files.length > 0) {
+            fileNameSpan.textContent = fileInput.files[0].name;
+        } else {
+            fileNameSpan.textContent = 'Choose file';
+        }
+    });
+}
+// <!-- ================================================================== -->
+// <!-- =================== END OF PRODUCT SCRIPT ====================== -->
+// <!-- ================================================================== -->
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1327,98 +1515,401 @@ async function deleteTransaction(id) {
   }
 }
 
-// TOP SALES SECTION
-async function fetchTopSales() {
-  try {
-    const res = await fetch('http://127.0.0.1:8000/api/top-sales');
-    const data = await res.json();
+// <!-- ================================================================== -->
+// <!-- ==================== DASHBOARD SCRIPT LOGIC ====================== -->
+// <!-- ================================================================== -->
+    let salesDonutChartInstance = null;
+    let salesBarChartInstance = null;
 
-    const section = document.getElementById('topSalesSection');
-    const list = document.getElementById('topSalesList');
-    list.innerHTML = ''; 
-
-    if (data.length > 0) {
-      section.classList.remove('hidden'); // 👈 Show the section if there's data
-    } else {
-      section.classList.add('hidden'); // 👈 Hide if no data
+    // --- LIVE CLOCK ---
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        document.getElementById('live-clock').textContent = timeString;
     }
 
-    data.forEach((item, index) => {
-      const li = document.createElement('li');
-      li.textContent = `${index + 1}. ${item.item_name} — ${item.total_quantity} pcs`;
-      list.appendChild(li);
-    });
-  } catch (err) {
-    console.error('Error fetching top sales:', err);
-  }
-}
 
+    // --- MAIN DASHBOARD UPDATE FUNCTION ---
+    async function updateDashboard() {
+        try {
+            // Fetch all necessary data in parallel
+            const [ordersResponse, topSalesResponse, appointmentsResponse, transactionsResponse] = await Promise.all([
+                fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('http://127.0.0.1:8000/api/top-sales', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
+                 fetch('http://127.0.0.1:8000/api/transactions', { headers: { Authorization: `Bearer ${token}` } })
+            ]);
 
-setInterval(() => {
-  fetchTopSales();
-}, 1000);
+            const orders = await ordersResponse.json();
+            const topSales = await topSalesResponse.json();
+            const appointmentsData = await appointmentsResponse.json();
+            const appointments = appointmentsData.data || appointmentsData;
+            const transactions = await transactionsResponse.json();
 
+            // 1. Update Stat Cards
+            updateStatCards(orders, transactions);
+            
+            // 2. Update Charts
+            updateSalesCharts(topSales);
+            
+            // 3. Update Activity Feed
+            updateActivityFeed(orders, appointments);
 
-let topSalesChartInstance = null;
-
-async function renderTopSalesPieChart() {
-  try {
-    const res = await fetch('http://127.0.0.1:8000/api/top-sales');
-    const data = await res.json();
-
-    const labels = data.map(item => item.item_name);
-    const quantities = data.map(item => item.total_quantity);
-
-    const ctx = document.getElementById('topSalesChart').getContext('2d');
-
-    // Destroy old chart if it exists
-    if (topSalesChartInstance) {
-      topSalesChartInstance.destroy();
-    }
-
-    topSalesChartInstance = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Top Sales',
-          data: quantities,
-          backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56',
-            '#4BC0C0', '#9966FF', '#FF9F40'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-          title: {
-            display: true,
-            text: 'Top Selling Products'
-          }
+        } catch (error) {
+            console.error("Failed to update dashboard:", error);
         }
-      }
+    }
+
+    function updateStatCards(orders, transactions) {
+        const now = new Date();
+        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+        let currentMonthRevenue = 0;
+        let previousMonthRevenue = 0;
+        let currentMonthSalesCount = 0;
+        let previousMonthSalesCount = 0;
+        let pendingOrders = 0;
+
+        // Process automated orders
+        orders.forEach(order => {
+            const orderDate = new Date(order.created_at);
+            if (order.tracking_stage === 'Delivered') {
+                if (orderDate >= startOfCurrentMonth) {
+                    currentMonthRevenue += parseFloat(order.total);
+                    currentMonthSalesCount++;
+                } else if (orderDate >= startOfPreviousMonth && orderDate <= endOfPreviousMonth) {
+                    previousMonthRevenue += parseFloat(order.total);
+                    previousMonthSalesCount++;
+                }
+            } else {
+                pendingOrders++;
+            }
+        });
+
+        // Process manual transactions
+        transactions.forEach(tx => {
+            if (tx.order_status === 'Successful' && tx.payment_status === 'Done') {
+                const txDate = new Date(tx.created_at);
+                const txTotal = parseFloat(tx.unit_price) * parseInt(tx.quantity);
+                if (txDate >= startOfCurrentMonth) {
+                    currentMonthRevenue += txTotal;
+                    currentMonthSalesCount++;
+                } else if (txDate >= startOfPreviousMonth && txDate <= endOfPreviousMonth) {
+                    previousMonthRevenue += txTotal;
+                    previousMonthSalesCount++;
+                }
+            }
+        });
+
+        // Function to calculate percentage change and format text
+        const getComparisonText = (current, previous, element, isRevenue = false) => {
+            const parentDiv = element.nextElementSibling;
+            if (previous === 0) {
+                if (current > 0) {
+                     parentDiv.querySelector('span').textContent = 'Up from last month';
+                     parentDiv.querySelector('svg').style.transform = 'rotate(0deg)';
+                     parentDiv.querySelector('svg').style.color = '#10B981'; // green
+                } else {
+                     parentDiv.querySelector('span').textContent = 'No change from last month';
+                      parentDiv.querySelector('svg').style.transform = 'rotate(90deg)';
+                     parentDiv.querySelector('svg').style.color = '#64748B'; // gray
+                }
+                return;
+            }
+
+            const percentageChange = ((current - previous) / previous) * 100;
+            if (percentageChange > 0) {
+                parentDiv.querySelector('span').textContent = `+${percentageChange.toFixed(0)}% from last month`;
+                parentDiv.querySelector('svg').style.transform = 'rotate(0deg)';
+                parentDiv.querySelector('svg').style.color = '#10B981'; // green
+            } else if (percentageChange < 0) {
+                parentDiv.querySelector('span').textContent = `${percentageChange.toFixed(0)}% from last month`;
+                parentDiv.querySelector('svg').style.transform = 'rotate(180deg)';
+                parentDiv.querySelector('svg').style.color = '#EF4444'; // red
+            } else {
+                parentDiv.querySelector('span').textContent = 'No change from last month';
+                parentDiv.querySelector('svg').style.transform = 'rotate(90deg)';
+                parentDiv.querySelector('svg').style.color = '#64748B'; // gray
+            }
+        };
+        
+        const totalRevenueEl = document.getElementById('total-revenue');
+        totalRevenueEl.textContent = `₱${currentMonthRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        getComparisonText(currentMonthRevenue, previousMonthRevenue, totalRevenueEl, true);
+
+        const totalSalesEl = document.getElementById('total-sales');
+        totalSalesEl.textContent = currentMonthSalesCount;
+        getComparisonText(currentMonthSalesCount, previousMonthSalesCount, totalSalesEl);
+
+        document.getElementById('pending-orders').textContent = pendingOrders;
+    }
+    
+    // --- CHART UPDATE FUNCTION ---
+    function updateSalesCharts(topSales) {
+        const salesLabels = topSales.map(item => item.item_name);
+        const salesValues = topSales.map(item => item.total_quantity);
+        const totalItemsSold = salesValues.reduce((sum, value) => sum + parseInt(value, 10), 0);
+        
+        const themeColors = {
+            primary: '#EF534F', secondary: '#FB7E96', accent: '#FFCDD2',
+            dark: '#4C4141', neutral: '#64748b', grid: '#e2e8f0'
+        };
+        const donutColors = [themeColors.primary, themeColors.secondary, themeColors.accent, themeColors.dark, '#FB923C', '#A78BFA', '#60A5FA'];
+
+        // Update total in donut center
+        document.getElementById('total-sales-value').textContent = totalItemsSold;
+
+        // Update Legend
+        const legendContainer = document.getElementById('sales-legend');
+        legendContainer.innerHTML = '';
+        if (topSales.length > 0) {
+            topSales.forEach((item, index) => {
+                const percentage = totalItemsSold > 0 ? ((item.total_quantity / totalItemsSold) * 100).toFixed(0) : 0;
+                const legendItem = `
+                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center" style="min-width: 0;">
+                            <span class="w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0" style="background-color: ${donutColors[index % donutColors.length]}"></span>
+                            <span class="font-medium text-slate-600 text-sm truncate">${item.item_name}</span>
+                        </div>
+                        <span class="font-semibold text-slate-800 text-sm ml-2">${percentage}%</span>
+                    </div>
+                `;
+                legendContainer.innerHTML += legendItem;
+            });
+        } else {
+            legendContainer.innerHTML = '<p class="text-slate-500 text-center">No sales data available.</p>';
+        }
+
+
+        // Donut Chart
+        const donutCanvas = document.getElementById('salesDonutChart');
+        if (donutCanvas) {
+            donutCanvas.parentElement.style.height = '330px';
+            donutCanvas.parentElement.style.width = '330px';
+        }
+
+        const donutCtx = donutCanvas?.getContext('2d');
+        if (salesDonutChartInstance) { salesDonutChartInstance.destroy(); }
+        if (donutCtx) {
+            salesDonutChartInstance = new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: salesLabels,
+                    datasets: [{ 
+                        data: salesValues,
+                        backgroundColor: donutColors,
+                        borderColor: '#fff',
+                        borderWidth: 4,
+                        hoverOffset: 15,
+                        hoverBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%', // increased from 65% to make the ring thinner
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false }
+                    },
+                    animation: {
+                        duration: donutCtx.canvas._hasAnimated ? 0 : 1000,
+                        easing: 'easeOutQuart',
+                        onComplete: () => {
+                            donutCtx.canvas._hasAnimated = true;
+                        }
+                    }
+                },
+            });
+        }
+
+          // Bar Chart
+          const barCtx = document.getElementById('salesBarChart')?.getContext('2d');
+          if (salesBarChartInstance) { salesBarChartInstance.destroy(); }
+          if (barCtx) {
+              salesBarChartInstance = new Chart(barCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: salesLabels,
+                      datasets: [{
+                          label: 'Sales',
+                          data: salesValues,
+                          backgroundColor: themeColors.primary,
+                          borderRadius: 8,
+                          barThickness: 20
+                      }]
+                  },
+                  options: {
+                      responsive: true, maintainAspectRatio: false,
+                      plugins: { legend: { display: false } },
+                      scales: {
+                          x: { grid: { display: false }, ticks: { color: themeColors.neutral } },
+                          y: { beginAtZero: true, grid: { color: themeColors.grid, drawBorder: false }, ticks: { color: themeColors.neutral, stepSize: 1 } }
+                      },
+                      animation: {
+                          // Check if the canvas has our custom property
+                          duration: barCtx.canvas._hasAnimated ? 0 : 1000,
+                          onComplete: () => {
+                              // Set the custom property to true after the first animation
+                              barCtx.canvas._hasAnimated = true;
+                          }
+                      }
+                  }
+              });
+          }
+    }
+    
+    // --- ACTIVITY FEED UPDATE FUNCTION ---
+    function updateActivityFeed(orders, appointments) {
+        const feed = document.getElementById('activity-feed');
+        feed.innerHTML = '';
+
+        const recentOrders = (orders || []).slice(-5).map(o => ({
+            type: 'order',
+            date: new Date(o.updated_at),
+            data: o
+        }));
+        
+        const recentAppointments = (appointments || []).slice(-5).map(a => ({
+            type: 'appointment',
+            date: new Date(a.updated_at),
+            data: a
+        }));
+        
+        const activities = [...recentOrders, ...recentAppointments]
+            .sort((a, b) => b.date - a.date) // Sort most recent first
+            .slice(0, 5); // Take the top 5 overall recent activities
+
+        if (activities.length === 0) {
+            feed.innerHTML = '<li class="flex items-center justify-center text-slate-500 py-10">No recent activities.</li>';
+            return;
+        }
+
+        activities.forEach(activity => {
+            const li = document.createElement('li');
+            li.className = 'flex items-center space-x-4 py-3';
+            let iconHtml = '';
+            let textHtml = '';
+            
+            const timeAgo = (date) => {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                if (seconds < 5) return "just now";
+                let interval = seconds / 31536000;
+                if (interval > 1) return Math.floor(interval) + " years ago";
+                interval = seconds / 2592000;
+                if (interval > 1) return Math.floor(interval) + " months ago";
+                interval = seconds / 86400;
+                if (interval > 1) return Math.floor(interval) + " days ago";
+                interval = seconds / 3600;
+                if (interval > 1) return Math.floor(interval) + " hours ago";
+                interval = seconds / 60;
+                if (interval > 1) return Math.floor(interval) + " minutes ago";
+                return Math.floor(seconds) + " seconds ago";
+            }
+
+            if (activity.type === 'order') {
+                iconHtml = `
+                    <div class="flex items-center justify-center h-10 w-10 rounded-full bg-green-100 text-green-600">
+                        <i data-feather="package"></i>
+                    </div>`;
+                let statusText = `New order #${activity.data.order_id} was placed.`;
+                if(activity.data.created_at !== activity.data.updated_at) {
+                    statusText = `Order #${activity.data.order_id} status updated to ${activity.data.tracking_stage || activity.data.status}.`
+                }
+                textHtml = `
+                    <div>
+                        <p class="text-sm font-medium text-slate-700">${statusText}</p>
+                        <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
+                    </div>`;
+            } else if (activity.type === 'appointment') {
+                 iconHtml = `
+                    <div class="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100 text-purple-600">
+                         <i data-feather="calendar"></i>
+                    </div>`;
+                let statusText = `New appointment from ${activity.data.full_name}.`;
+                 if(activity.data.created_at !== activity.data.updated_at) {
+                    statusText = `Appointment for ${activity.data.full_name} was ${activity.data.status}.`
+                }
+                textHtml = `
+                    <div>
+                        <p class="text-sm font-medium text-slate-700">${statusText}</p>
+                        <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
+                    </div>`;
+            }
+            li.innerHTML = iconHtml + textHtml;
+            feed.appendChild(li);
+        });
+        feather.replace();
+    }
+
+    // --- MINI CALENDAR WIDGET ---
+    function initializeCalendar() {
+        const calendarHeader = document.getElementById('calendar-month-year');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+        let currentDate = new Date(); 
+
+        const renderCalendar = () => {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            if(!calendarHeader) return;
+            calendarHeader.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+            calendarGrid.innerHTML = '';
+            
+            const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            daysOfWeek.forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'font-semibold text-slate-500';
+                dayEl.textContent = day;
+                calendarGrid.appendChild(dayEl);
+            });
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div');
+                dayEl.textContent = i;
+                dayEl.className = 'p-1 cursor-pointer rounded-full hover:bg-slate-100 flex items-center justify-center h-6 w-6';
+                const today = new Date();
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    dayEl.style.backgroundColor = '#EF534F';
+                    dayEl.className += ` text-white font-bold`;
+                }
+                calendarGrid.appendChild(dayEl);
+            }
+        };
+        
+        prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+        nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+        renderCalendar();
+    }
+    
+    // --- INITIALIZE DASHBOARD & SET INTERVALS ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initial call
+        if(document.getElementById('home').classList.contains('hidden') === false) {
+             updateDashboard();
+        }
+        initializeCalendar();
+        updateClock();
+
+        // Set intervals to auto-refresh
+        setInterval(updateDashboard, 5000); // Refresh dashboard data every 5 seconds
+        setInterval(updateClock, 1000); // Update clock every second
     });
 
-  } catch (err) {
-    console.error('Error rendering Top Sales Pie Chart:', err);
-  }
-}
-
-// Auto-refresh every 5 seconds
-setInterval(renderTopSalesPieChart, 5000);
-
-// Load once on page load
-document.addEventListener('DOMContentLoaded', renderTopSalesPieChart);
-
-//chartttsss
+// <!-- ================================================================== -->
+// <!-- ==================== END OF DASHBOARD SCRIPT ===================== -->
+// <!-- ================================================================== -->
 
 let salesLineChartInstance = null;
-let salesBarChartInstance = null;
+let salesBarChartAnalyticsInstance = null;
 
 async function renderSalesTrendsCharts() {
   const period = document.getElementById('salesPeriod').value;
@@ -1450,9 +1941,9 @@ async function renderSalesTrendsCharts() {
     });
 
     // ===== Bar Chart =====
-    const ctxBar = document.getElementById('salesBarChart').getContext('2d');
-    if (salesBarChartInstance) salesBarChartInstance.destroy();
-    salesBarChartInstance = new Chart(ctxBar, {
+    const ctxBar = document.getElementById('salesBarChartAnalytics').getContext('2d');
+    if (salesBarChartAnalyticsInstance) salesBarChartAnalyticsInstance.destroy();
+    salesBarChartAnalyticsInstance = new Chart(ctxBar, {
       type: 'bar',
       data: {
         labels: labels,
@@ -1645,8 +2136,8 @@ async function loadAppointments() {
         <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
         <td class="px-6 py-6 whitespace-nowrap text-sm font-medium">
            <div class="flex items-center space-x-3">
-                ${a.qr_code_path ? `<a href="${fileUrl(a.qr_code_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">QR</a>` : ''}
-                ${a.pdf_path ? `<a href="${fileUrl(a.pdf_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">PDF</a>` : ''}
+               ${a.qr_code_path ? `<a href="${fileUrl(a.qr_code_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">QR</a>` : ''}
+               ${a.pdf_path ? `<a href="${fileUrl(a.pdf_path)}" target="_blank" class="text-indigo-600 hover:text-indigo-900">PDF</a>` : ''}
            </div>
         </td>
         <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-x-2">${actionButtons}</td>
@@ -1658,7 +2149,7 @@ async function loadAppointments() {
 async function approveAppointment(id) {
   try {
     const response = await fetch(`http://127.0.0.1:8000/api/appointments/${id}/approve`, {
-      method: 'PUT',    // ✅ match Laravel route
+      method: 'PUT',   // ✅ match Laravel route
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -1699,7 +2190,7 @@ async function rejectAppointment(id) {
 }
 
 // <!-- ================================================================== -->
-// <!-- ====================      ORDERS SCRIPT     ====================== -->
+// <!-- ====================   ORDERS SCRIPT     ======================= -->
 // <!-- ================================================================== -->
 
 // Orders
@@ -1754,31 +2245,31 @@ async function fetchOrders() {
             let actions = '';
             const normalizedStatus = (order.status || '').toLowerCase();
 
-              if (normalizedStatus === 'pending') {
-                  // UI UPDATE: BIGGER BUTTONS WITH ICONS
-                  actions += `
-                      <button onclick="updateOrderStatus(${order.id}, 'Approved')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
-                          <i data-feather="check" class="w-4 h-4"></i> Approve
-                      </button>
-                      <button onclick="updateOrderStatus(${order.id}, 'Rejected')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-gray-500 rounded-lg hover:bg-gray-600">
-                          <i data-feather="x" class="w-4 h-4"></i> Reject
-                      </button>
-                  `;
-              } else {
-                  // UI UPDATE: DROPDOWN SAME SIZE AS BUTTONS
-                  actions += `
-                      <div class="relative inline-flex items-center">
-                          <i data-feather="${order.status === 'Approved' ? 'check' : 'x'}" class="absolute left-4 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
-                          <select onchange="handleEditStatus(${order.id}, this.value)" 
-                              class="appearance-none pl-10 pr-10 py-3 text-xs font-medium rounded-lg border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 
-                              ${order.status === 'Approved' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-red-100 text-red-800 font-semibold'}">
-                              <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                              <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-                          </select>
-                          <i data-feather="chevron-down" class="absolute right-3 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
-                      </div>
-                  `;
-              }
+            if (normalizedStatus === 'pending') {
+                 // UI UPDATE: BIGGER BUTTONS WITH ICONS
+                actions += `
+                    <button onclick="updateOrderStatus(${order.id}, 'Approved')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                        <i data-feather="check" class="w-4 h-4"></i> Approve
+                    </button>
+                    <button onclick="updateOrderStatus(${order.id}, 'Rejected')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-gray-500 rounded-lg hover:bg-gray-600">
+                        <i data-feather="x" class="w-4 h-4"></i> Reject
+                    </button>
+                `;
+            } else {
+                // UI UPDATE: DROPDOWN SAME SIZE AS BUTTONS
+                actions += `
+                    <div class="relative inline-flex items-center">
+                        <i data-feather="${order.status === 'Approved' ? 'check' : 'x'}" class="absolute left-4 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
+                        <select onchange="handleEditStatus(${order.id}, this.value)" 
+                            class="appearance-none pl-10 pr-10 py-3 text-xs font-medium rounded-lg border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 
+                            ${order.status === 'Approved' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-red-100 text-red-800 font-semibold'}">
+                            <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>Approved</option>
+                            <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                        <i data-feather="chevron-down" class="absolute right-3 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
+                    </div>
+                `;
+            }
 
             // UI UPDATE: BIGGER DELETE BUTTON
             actions += `
@@ -1842,103 +2333,103 @@ function copyOrderId(orderId, btn) {
 
 // THIS IS YOUR EXISTING TOAST FUNCTION, UNCHANGED
 function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
 
-  document.body.appendChild(toast);
+  document.body.appendChild(toast);
 
-  setTimeout(() => toast.classList.add("show"), 100);
+  setTimeout(() => toast.classList.add("show"), 100);
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 // THIS IS YOUR EXISTING UPDATEORDERSTATUS FUNCTION, UNCHANGED
 async function updateOrderStatus(orderId, status) {
-  try {
-    const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({ status })
-    });
+  try {
+    const token = localStorage.getItem('adminToken'); 
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ status })
+    });
 
-    if (response.ok) {
-      const data = await response.json();
-      const order = data.order;
+    if (response.ok) {
+      const data = await response.json();
+      const order = data.order;
 
-      showToast(`Order ${order.order_id} marked as ${status}`, "success");
+      showToast(`Order ${order.order_id} marked as ${status}`, "success");
 
-      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
-      if (order.delivery_phone) {
-        try {
-          window.electronAPI.sendSMS(order.delivery_phone, message);
-          console.log(`SMS sent to ${order.delivery_phone}`);
-        } catch (smsError) {
-          console.error('Failed to send SMS:', smsError);
-        }
-      } else {
-        console.warn('No phone number found for this order.');
-      }
+      const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
+      if (order.delivery_phone) {
+        try {
+          window.electronAPI.sendSMS(order.delivery_phone, message);
+          console.log(`SMS sent to ${order.delivery_phone}`);
+        } catch (smsError) {
+          console.error('Failed to send SMS:', smsError);
+        }
+      } else {
+        console.warn('No phone number found for this order.');
+      }
 
-      fetchOrders();
-    } else {
-      console.error("Failed to update order status");
-      showToast("Error updating order status", "error");
-    }
-  } catch (error) {
-    if (error.response) {
-      console.error("API response error:", error.response);
-    } else if (error.request) {
-      console.error("No response from API:", error.request);
-    } else {
-      console.error("Error in request setup:", error.message);
-    }
-    showToast("Something went wrong while updating status.", "error");
-  }
+      fetchOrders();
+    } else {
+      console.error("Failed to update order status");
+      showToast("Error updating order status", "error");
+    }
+  } catch (error) {
+    if (error.response) {
+      console.error("API response error:", error.response);
+    } else if (error.request) {
+      console.error("No response from API:", error.request);
+    } else {
+      console.error("Error in request setup:", error.message);
+    }
+    showToast("Something went wrong while updating status.", "error");
+  }
 }
 
 // THIS IS YOUR EXISTING HANDLEEDITSTATUS FUNCTION, UNCHANGED
 function handleEditStatus(orderId, newStatus) {
-  if (!newStatus) return;
-  updateOrderStatus(orderId, newStatus);
+  if (!newStatus) return;
+  updateOrderStatus(orderId, newStatus);
 }
 
 // THIS IS YOUR EXISTING DELETEORDER FUNCTION, UNCHANGED
 async function deleteOrder(orderId) {
-  // Grab the order_id from the table row for nicer message
-  const row = document.querySelector(`#ordersTable tbody tr button[onclick="deleteOrder(${orderId})"]`)?.closest('tr');
-  const orderCode = row?.querySelector('td span')?.textContent || orderId;
+  // Grab the order_id from the table row for nicer message
+  const row = document.querySelector(`#ordersTable tbody tr button[onclick="deleteOrder(${orderId})"]`)?.closest('tr');
+  const orderCode = row?.querySelector('td span')?.textContent || orderId;
 
-  if (!confirm(`Are you sure you want to delete Order ${orderCode}?`)) return;
+  if (!confirm(`Are you sure you want to delete Order ${orderCode}?`)) return;
 
-  try {
-    const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-    });
+  try {
+    const token = localStorage.getItem('adminToken'); 
+    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+    });
 
-    if (response.ok) {
-      showToast(`Order ${orderCode} has been deleted`, "success");
-      fetchOrders();
-    } else {
-      console.error("Failed to delete order");
-      showToast("Error deleting order", "error");
-    }
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    showToast("Something went wrong while deleting the order", "error");
-  }
+    if (response.ok) {
+      showToast(`Order ${orderCode} has been deleted`, "success");
+      fetchOrders();
+    } else {
+      console.error("Failed to delete order");
+      showToast("Error deleting order", "error");
+    }
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    showToast("Something went wrong while deleting the order", "error");
+  }
 }
 
 // Auto-load
@@ -2056,6 +2547,7 @@ async function initializeTracking() {
         
         const dropdown = orderCard.querySelector('.stage-select');
         const nextButton = orderCard.querySelector('.next-stage-btn');
+        const doneButton = orderCard.querySelector('.done-btn');
         const isDelivered = currentStage === 'Delivered';
         const isAtFinalAdminStage = currentStage === 'On Delivery';
 
@@ -2065,6 +2557,9 @@ async function initializeTracking() {
         }
         if (nextButton) {
             nextButton.disabled = isAtFinalAdminStage || isDelivered;
+        }
+        if(doneButton){
+            doneButton.disabled = currentStage !== 'On Delivery';
         }
     };
 
@@ -2085,14 +2580,26 @@ async function initializeTracking() {
                     <div>
                         <h2 class="tracking-order-id">${order.orderId}</h2>
                         <p class="tracking-customer-name">Customer: ${order.customerName}</p>
+                        <p class="tracking-item-name">Item(s): <strong>${order.items}</strong></p>
+                        <p class="tracking-total-amount">Total: <strong>₱${parseFloat(order.total).toFixed(2)}</strong></p>
                         <p class="tracking-timestamp">Created order time: ${formatOrderTimestamp(order.createdAt)}</p>
                     </div>
                     <div class="tracking-actions">
-                        <select class="stage-select">
-                            ${STAGES.map(stage => `<option value="${stage}" ${order.currentStage === stage ? 'selected' : ''}>${stage}</option>`).join('')}
-                        </select>
-                        <button class="next-stage-btn">Next Stage</button>
-                    </div>
+    <button class="done-btn bg-green-500 text-white px-5 py-3 rounded-md text-xs hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1">
+        <i data-feather="check-circle" class="w-4 h-4"></i>
+        Done
+    </button>
+
+    <select class="stage-select">
+        ${STAGES.map(stage => `<option value="${stage}" ${order.currentStage === stage ? 'selected' : ''}>${stage}</option>`).join('')}
+    </select>
+
+    <button class="next-stage-btn bg-blue-500 text-white px-5 py-3 rounded-md text-xs hover:bg-blue-600 flex items-center gap-1">
+        <i data-feather="arrow-right-circle" class="w-5 h-5"></i>
+        Next Stage
+    </button>
+</div>
+
                 </div>
                 <div class="progress-tracker-container">
                     ${STAGES.map(stage => `
@@ -2152,6 +2659,26 @@ async function initializeTracking() {
                 }
             }
         }
+        
+        if (event.target.classList.contains('done-btn')) {
+            const button = event.target;
+            const orderCard = button.closest('.tracking-order-card');
+            const orderDbId = orderCard.dataset.orderDbId;
+            const order = orders.find(o => o.id == orderDbId);
+            const newStage = 'Delivered';
+             if (confirm(`Mark order ${order.orderId} as Delivered? This action cannot be undone.`)) {
+                button.disabled = true;
+                const success = await updateOrderStatusAPI(order.id, newStage);
+                 if (success) {
+                    order.currentStage = newStage;
+                    updateTrackerUI(orderCard, newStage);
+                    showTrackingToast(`Order ${order.orderId} has been marked as Delivered.`);
+                } else {
+                    showTrackingToast(`Failed to update ${order.orderId}.`);
+                    button.disabled = false;
+                }
+            }
+        }
     });
 
     trackingSection.addEventListener('change', async (event) => {
@@ -2199,7 +2726,9 @@ async function initializeTracking() {
                 orderId: order.order_id,
                 customerName: order.delivery_name ?? order.user?.name ?? 'Unknown',
                 currentStage: order.tracking_stage || 'Approved',
-                createdAt: order.created_at
+                createdAt: order.created_at,
+                items: order.items.map(i => `${i.product.name} (x${i.quantity})`).join(', '),
+                total: order.total
             }));
         renderOrders();
     } catch (error) {
@@ -2210,4 +2739,5 @@ async function initializeTracking() {
   </script>
 </body>
 </html>
+
 
