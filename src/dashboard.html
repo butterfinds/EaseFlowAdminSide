@@ -699,25 +699,99 @@
 <!-- ================   ANALYTICS SECTION       ====================== -->
 <!-- ================================================================== -->
 <div id="analytics" class="hidden">
-      <h1>Analytics</h1>
-      
-    <div>
-  <label for="salesPeriod">Select Period:</label>
-  <select id="salesPeriod">
-    <option value="day">Daily</option>
-    <option value="week">Weekly</option>
-    <option value="month" selected>Monthly</option>
-    <option value="year">Yearly</option>
-  </select>
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Sales Analytics</h1>
+            <p class="text-gray-500 mt-1">A visual overview of your sales performance.</p>
+        </header>
+
+        <!-- Main Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sales Trend Line Chart -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-xl font-semibold">Orders Analytics</h2>
+                        <p class="text-sm text-gray-500 mt-1">This chart shows sales totals over time. It helps track the performance of your different sales channels.</p>
+                    </div>
+
+                    <select id="salesPeriod" class="border border-gray-200 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="day">Daily</option>
+                        <option value="week">Weekly</option>
+                        <option value="month" selected>Monthly</option>
+                        <option value="year">Yearly</option>
+                    </select>
+                </div>
+
+                <div class="h-80">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+            <!-- Earnings Donut Chart -->
+
+            <div class="bg-white p-6 rounded-2xl shadow-md">
+
+                <div>
+                    <h2 class="text-xl font-semibold">Earnings Breakdown</h2>
+                    <p class="text-sm text-gray-500 mt-1">A breakdown of daily earnings from different sources. This helps identify which channels are most profitable.</p>
+                </div>
+
+                <div class="relative mx-auto mt-4" style="max-width: 250px;">
+                    <canvas id="earningsChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                         <div class="text-center">
+                            <p id="earningsTotal" class="text-3xl font-bold">₱0</p>
+                            <p class="text-sm text-gray-500">Today</p>
+                         </div>
+                    </div>
+                </div>
+
+                <div id="earningsLegend" class="mt-6 space-y-2 text-sm text-gray-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                             <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                             <span>Offline</span>
+                        </div>
+                        <span id="offlineEarnings">₱0</span>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                             <span class="w-3 h-3 rounded-full bg-orange-400 mr-2"></span>
+                             <span>Online</span>
+                        </div>
+                        <span id="onlineEarnings">₱0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Row of Charts -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- Sales by Category Bar Chart -->
+
+            <div class="bg-white p-6 rounded-2xl shadow-md">
+                <h2 class="text-xl font-semibold">Sales by Category</h2>
+                <p class="text-sm text-gray-500 mt-1">This chart displays the sales performance of different product categories, helping you identify top-performing items.</p>
+                <div class="h-80 mt-4">
+                    <canvas id="salesByCategoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Customer Satisfaction Polar Area Chart -->
+
+            <div class="bg-white p-6 rounded-2xl shadow-md">
+                <h2 class="text-xl font-semibold">Customer Satisfaction</h2>
+                 <p class="text-sm text-gray-500 mt-1">This chart illustrates customer satisfaction levels, providing insight into the overall customer experience with your products.</p>
+                <div class="h-80 mt-4 flex justify-center items-center">
+
+                    <canvas id="customerSatisfactionChart" style="max-width: 300px; max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-  <div id="salesTrendsSection">
-    <h2><i class="fas fa-chart-bar"></i> Sales Trends</h2>
-    <canvas id="salesLineChart" width="600" height="300"></canvas>
-    <canvas id="salesBarChart" width="600" height="300" style="margin-top:20px;"></canvas>
-  </div>
-  </div>
-
 <!-- ================================================================== -->
 <!-- =======================END OF ANALYTICS SECTION ================== -->
 <!-- ================================================================== -->
@@ -784,19 +858,20 @@
     const token = localStorage.getItem('adminToken');
     if (!token) window.location.href = './index.html';
 
-    function showSection(id) {
-        document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        if (id === 'home') updateDashboard();
-        if (id === 'products') loadProducts();
-        if (id === 'orders') fetchOrders();
-        if (id === 'transactions') fetchTransactions();
-        if (id === 'tracking') initializeTracking();
-        // UI UPDATE: INITIALIZE FEATHER ICONS FOR NEW UI SECTIONS
-        if (id === 'appointments' || id === 'orders' || id === 'products' || id === 'tracking') {
-            feather.replace();
-        }
-    }
+function showSection(id) {
+      document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'home') updateDashboard();
+      if (id === 'products') loadProducts();
+      if (id === 'orders') fetchOrders();
+      if (id === 'transactions') fetchTransactions();
+      if (id === 'tracking') initializeTracking();
+      // ADDED: This line initializes the analytics charts when the section is shown.
+      if (id === 'analytics') initializeAnalyticsCharts(); 
+      if (id === 'appointments' || id === 'orders' || id === 'products' || id === 'tracking') {
+          feather.replace();
+      }
+}
 
     function logout() {
       localStorage.removeItem('adminToken');
@@ -1311,8 +1386,6 @@ function notifyNewMessage(msg) {
 }
 
 
-
-
 let lastFetchedMessageIdMap = {}; // per customer
 
 async function checkAllCustomersForNewMessages() {
@@ -1531,34 +1604,61 @@ async function deleteTransaction(id) {
 
     // --- MAIN DASHBOARD UPDATE FUNCTION ---
     async function updateDashboard() {
-        try {
-            // Fetch all necessary data in parallel
-            const [ordersResponse, topSalesResponse, appointmentsResponse, transactionsResponse] = await Promise.all([
-                fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('http://127.0.0.1:8000/api/top-sales', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
-                 fetch('http://127.0.0.1:8000/api/transactions', { headers: { Authorization: `Bearer ${token}` } })
-            ]);
+        try {
+            // Fetch all necessary data in parallel
+            const [ordersResponse, appointmentsResponse, transactionsResponse] = await Promise.all([
+                fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('http://127.0.0.1:8000/api/transactions', { headers: { Authorization: `Bearer ${token}` } })
+            ]);
 
-            const orders = await ordersResponse.json();
-            const topSales = await topSalesResponse.json();
-            const appointmentsData = await appointmentsResponse.json();
-            const appointments = appointmentsData.data || appointmentsData;
-            const transactions = await transactionsResponse.json();
+            const orders = await ordersResponse.json();
+            const appointmentsData = await appointmentsResponse.json();
+            const appointments = appointmentsData.data || appointmentsData;
+            const transactions = await transactionsResponse.json();
 
-            // 1. Update Stat Cards
-            updateStatCards(orders, transactions);
-            
-            // 2. Update Charts
-            updateSalesCharts(topSales);
-            
-            // 3. Update Activity Feed
-            updateActivityFeed(orders, appointments);
+            // 1. Update Stat Cards
+            updateStatCards(orders, transactions);
+            
+            // 2. Aggregate data for charts from both manual transactions and delivered orders
+            const productSales = {};
 
-        } catch (error) {
-            console.error("Failed to update dashboard:", error);
-        }
-    }
+            // Process manual transactions
+            transactions.forEach(tx => {
+                // Count successful transactions towards sales volume
+                if (tx.order_status === 'Successful') {
+                    productSales[tx.item_name] = (productSales[tx.item_name] || 0) + parseInt(tx.quantity, 10);
+                }
+            });
+
+            // Process automated orders
+            orders.forEach(order => {
+                // Only count orders that have been successfully delivered
+                if (order.tracking_stage === 'Delivered') {
+                    order.items.forEach(item => {
+                        if (item.product && item.product.name) {
+                            productSales[item.product.name] = (productSales[item.product.name] || 0) + parseInt(item.quantity, 10);
+                        }
+                    });
+                }
+            });
+
+            // Format the aggregated data into the structure expected by the chart function
+            const combinedTopSales = Object.keys(productSales).map(name => ({
+                item_name: name,
+                total_quantity: productSales[name]
+            })).sort((a, b) => b.total_quantity - a.total_quantity); // Sort descending by quantity
+            
+            // 3. Update Charts with the newly combined data
+            updateSalesCharts(combinedTopSales);
+            
+            // 4. Update Activity Feed
+            updateActivityFeed(orders, appointments);
+
+        } catch (error) {
+            console.error("Failed to update dashboard:", error);
+        }
+    }
 
     function updateStatCards(orders, transactions) {
         const now = new Date();
@@ -1908,68 +2008,249 @@ async function deleteTransaction(id) {
 // <!-- ==================== END OF DASHBOARD SCRIPT ===================== -->
 // <!-- ================================================================== -->
 
-let salesLineChartInstance = null;
-let salesBarChartAnalyticsInstance = null;
+// <!-- ================================================================== -->
+// <!-- ==================== ANALYTICS         SCRIPT ===================== -->
+// <!-- ================================================================== -->
+// // // // Global chart instances to prevent duplicates
+let salesTrendChartInstance = null;
+let earningsChartInstance = null;
+let salesByCategoryChartInstance = null;
+let customerSatisfactionChartInstance = null;
+let isAnalyticsInitialized = false;
 
-async function renderSalesTrendsCharts() {
-  const period = document.getElementById('salesPeriod').value;
+function initializeAnalyticsCharts() {
+    // This function runs only once to set up the charts and event listeners.
+    if (isAnalyticsInitialized) {
+        updateAnalyticsData(); // If already set up, just refresh the data.
+        return;
+    }
 
-  try {
-    const res = await fetch(`http://127.0.0.1:8000/api/sales-trends?period=${period}`);
-    const data = await res.json();
-
-    const labels = data.map(entry => entry.period);
-    const sales = data.map(entry => parseFloat(entry.total_sales));
-
-    // ===== Line Chart =====
-    const ctxLine = document.getElementById('salesLineChart').getContext('2d');
-    if (salesLineChartInstance) salesLineChartInstance.destroy();
-    salesLineChartInstance = new Chart(ctxLine, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: `Sales (${period})`,
-          data: sales,
-          borderColor: '#36A2EB',
-          backgroundColor: 'rgba(54,162,235,0.2)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-
-    // ===== Bar Chart =====
-    const ctxBar = document.getElementById('salesBarChartAnalytics').getContext('2d');
-    if (salesBarChartAnalyticsInstance) salesBarChartAnalyticsInstance.destroy();
-    salesBarChartAnalyticsInstance = new Chart(ctxBar, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: `Sales (${period})`,
-          data: sales,
-          backgroundColor: '#FF6384'
-        }]
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-
-  } catch (err) {
-    console.error('Error rendering sales trends charts:', err);
-  }
+    const salesPeriodSelector = document.getElementById('salesPeriod');
+    if (salesPeriodSelector) {
+        salesPeriodSelector.addEventListener('change', updateAnalyticsData);
+    }
+    
+    setupAllCharts(); // Create the empty chart canvases.
+    isAnalyticsInitialized = true;
 }
 
-// Refresh when dropdown changes
-document.getElementById('salesPeriod').addEventListener('change', renderSalesTrendsCharts);
+async function setupAllCharts() {
+    // This function creates the chart instances with their initial configurations.
+    // The data will be loaded by updateAnalyticsData().
 
-// Auto-refresh every 10 seconds
-setInterval(renderSalesTrendsCharts, 10000);
+    // 1. Sales Trend Line Chart
+    const salesCtx = document.getElementById('salesTrendChart')?.getContext('2d');
+    if (salesCtx) {
+        if (salesTrendChartInstance) salesTrendChartInstance.destroy();
+        salesTrendChartInstance = new Chart(salesCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } },
+                    tooltip: { mode: 'index', intersect: false, backgroundColor: '#fff', titleColor: '#333', bodyColor: '#666', borderColor: '#ddd', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: true }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { drawBorder: false }, ticks: { callback: value => `₱${value}` } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
 
-// Initial load
-document.addEventListener('DOMContentLoaded', renderSalesTrendsCharts);
+    // 2. Earnings Donut Chart
+    const earningsCtx = document.getElementById('earningsChart')?.getContext('2d');
+    if (earningsCtx) {
+        if (earningsChartInstance) earningsChartInstance.destroy();
+        earningsChartInstance = new Chart(earningsCtx, {
+            type: 'doughnut',
+            data: { labels: [], datasets: [] },
+            options: { responsive: true, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+    }
 
+    // 3. Sales by Product Bar Chart
+    const categoryCtx = document.getElementById('salesByCategoryChart')?.getContext('2d');
+    if (categoryCtx) {
+        if (salesByCategoryChartInstance) salesByCategoryChartInstance.destroy();
+        salesByCategoryChartInstance = new Chart(categoryCtx, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { drawBorder: false } }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    // 4. Customer Satisfaction Polar Area Chart
+    const satisfactionCtx = document.getElementById('customerSatisfactionChart')?.getContext('2d');
+    if (satisfactionCtx) {
+        if (customerSatisfactionChartInstance) customerSatisfactionChartInstance.destroy();
+        customerSatisfactionChartInstance = new Chart(satisfactionCtx, {
+            type: 'polarArea',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+                scales: { r: { ticks: { display: false }, grid: { circular: true } } }
+            }
+        });
+    }
+
+    await updateAnalyticsData(); // Load the initial data into the new charts.
+}
+
+async function updateAnalyticsData() {
+    const period = document.getElementById('salesPeriod')?.value || 'month';
+    const apiHeaders = { 'Authorization': `Bearer ${token}` };
+
+    try {
+        // Fetch all data sources in parallel for efficiency.
+        const [ordersRes, transactionsRes, reviewsRes] = await Promise.all([
+            fetch('http://127.0.0.1:8000/api/admin/orders', { headers: apiHeaders }),
+            fetch('http://127.0.0.1:8000/api/transactions', { headers: apiHeaders }),
+            fetch('http://127.0.0.1:8000/api/reviews', { headers: apiHeaders }) // Assuming a /reviews endpoint exists.
+        ]);
+
+        const orders = ordersRes.ok ? await ordersRes.json() : [];
+        const transactions = transactionsRes.ok ? await transactionsRes.json() : [];
+        const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
+
+        // --- 1. Process data for Sales Trend (Line Chart) ---
+        if (salesTrendChartInstance) {
+            const salesDataMap = new Map();
+
+            // Helper function to group sales by the selected period (day, week, etc.)
+            const processSaleEntry = (dateStr, amount) => {
+                const date = new Date(dateStr);
+                let key;
+                switch (period) {
+                    case 'day': key = date.toLocaleDateString('en-CA'); break; // YYYY-MM-DD for sorting
+                    case 'week':
+                        const firstDay = new Date(date.setDate(date.getDate() - date.getDay()));
+                        key = `Week of ${firstDay.toLocaleDateString('en-CA')}`;
+                        break;
+                    case 'month': key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; break; // YYYY-MM
+                    case 'year': key = `${date.getFullYear()}`; break;
+                }
+                salesDataMap.set(key, (salesDataMap.get(key) || 0) + parseFloat(amount || 0));
+            };
+
+            // Process delivered online orders
+            orders.filter(o => o.tracking_stage === 'Delivered').forEach(order => processSaleEntry(order.created_at, order.total));
+            // Process successful manual transactions
+            transactions.filter(t => t.order_status === 'Successful').forEach(tx => processSaleEntry(tx.created_at, tx.unit_price * tx.quantity));
+
+            const sortedEntries = [...salesDataMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+            const labels = sortedEntries.map(entry => entry[0]);
+            const data = sortedEntries.map(entry => entry[1]);
+
+            salesTrendChartInstance.data.labels = labels;
+            salesTrendChartInstance.data.datasets = [{
+                label: 'Total Sales',
+                data: data,
+                borderColor: '#EF534F',
+                backgroundColor: 'rgba(239, 83, 79, 0.1)',
+                tension: 0.3,
+                fill: true
+            }];
+            salesTrendChartInstance.update();
+        }
+
+        // --- 2. Process data for Earnings Breakdown (Doughnut Chart) ---
+        if (earningsChartInstance) {
+            const offlineTotal = transactions.filter(t => t.order_status === 'Successful').reduce((sum, t) => sum + (parseFloat(t.unit_price || 0) * parseInt(t.quantity || 0)), 0);
+            const onlineTotal = orders.filter(o => o.tracking_stage === 'Delivered').reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+            const total = offlineTotal + onlineTotal;
+
+            earningsChartInstance.data = {
+                labels: ['Offline', 'Online'],
+                datasets: [{
+                    data: [offlineTotal, onlineTotal],
+                    backgroundColor: ['#4A90E2', '#F5A623'],
+                    borderWidth: 0,
+                }]
+            };
+            earningsChartInstance.update();
+
+            document.getElementById('earningsTotal').textContent = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('offlineEarnings').textContent = `₱${offlineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('onlineEarnings').textContent = `₱${onlineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // --- 3. Process data for Sales by Product (Bar Chart) ---
+        if (salesByCategoryChartInstance) {
+            const productMap = new Map();
+            
+            // Process delivered online orders
+            orders.filter(o => o.tracking_stage === 'Delivered').forEach(order => {
+                order.items?.forEach(item => {
+                    const name = item.product?.name;
+                    if (name) productMap.set(name, (productMap.get(name) || 0) + parseInt(item.quantity || 0));
+                });
+            });
+
+            // Process successful manual transactions
+            transactions.filter(t => t.order_status === 'Successful').forEach(tx => {
+                const name = tx.item_name;
+                if (name) productMap.set(name, (productMap.get(name) || 0) + parseInt(tx.quantity || 0));
+            });
+
+            const sortedProducts = [...productMap.entries()].sort((a, b) => b[1] - a[1]);
+            const labels = sortedProducts.map(entry => entry[0]);
+            const data = sortedProducts.map(entry => entry[1]);
+
+            salesByCategoryChartInstance.data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Quantity Sold',
+                    data: data,
+                    backgroundColor: 'rgba(239, 83, 79, 0.7)',
+                    borderColor: '#EF534F',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            };
+            salesByCategoryChartInstance.update();
+        }
+
+        // --- 4. Process data for Customer Satisfaction (Polar Area Chart) ---
+        if (customerSatisfactionChartInstance) {
+            const ratingBuckets = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            reviews.forEach(r => {
+                const rating = parseInt(r.rating);
+                if (ratingBuckets.hasOwnProperty(rating)) ratingBuckets[rating]++;
+            });
+
+            customerSatisfactionChartInstance.data = {
+                labels: ['Excellent (5★)', 'Good (4★)', 'Average (3★)', 'Poor (2★)', 'Very Poor (1★)'],
+                datasets: [{
+                    label: 'Number of Ratings',
+                    data: [ratingBuckets[5], ratingBuckets[4], ratingBuckets[3], ratingBuckets[2], ratingBuckets[1]],
+                    backgroundColor: [
+                        'rgba(74, 222, 128, 0.7)',  // Green
+                        'rgba(59, 130, 246, 0.7)',  // Blue
+                        'rgba(251, 191, 36, 0.7)', // Amber
+                        'rgba(249, 115, 22, 0.7)',  // Orange
+                        'rgba(239, 68, 68, 0.7)'   // Red
+                    ],
+                }]
+            };
+            customerSatisfactionChartInstance.update();
+        }
+
+    } catch (error) {
+        console.error('Analytics update error:', error);
+        // You could add error messages to the UI here if needed.
+    }
+}
+
+// <!-- ================================================================== -->
+// <!-- ==================== END OF ANALYTICS SCRIPT ===================== -->
+// <!-- ================================================================== -->
 
 
   const API_URL = "http://localhost:8000/api/custom-shirts"; // Laravel API
@@ -2439,7 +2720,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
+// APPOINTMENTS SYSTE
 document.getElementById('appointmentsReloadBtn').addEventListener('click', loadAppointments);
 appointmentsStatusFilter.addEventListener('change', loadAppointments);
 
@@ -2739,5 +3020,3 @@ async function initializeTracking() {
   </script>
 </body>
 </html>
-
-
