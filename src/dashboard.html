@@ -71,8 +71,8 @@
     /* UPDATE: ADDED #products TO THIS RULE TO FIX TABLE SPACING */
     #orders table th, #orders table td,
     #products table th, #products table td {
-        border: 2vh;
-        padding: 3vh;               
+        border: 1vh;
+        padding: 1.5vh;               
     }
 
     #appointments table th, #appointments table td{
@@ -184,6 +184,7 @@
   <h2>EASEPrint</h2>
   <ul>
     <li onclick="showSection('home')"><i class="fas fa-home"></i> Dashboard</li>
+    <li onclick="showSection('pos')"><i class="fas fa-cash-register"></i> Point of Sale</li>
     <li onclick="showSection('products')"><i class="fas fa-box-open"></i> Products</li>
     <li onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> Orders</li>
     <li onclick="showSection('appointments')"><i class="fas fa-calendar-alt"></i> Appointments</li>
@@ -309,6 +310,101 @@
 <!-- ================================================================== -->
 <!-- ==================== END OF DASHBOARD SECTION ==================== -->
 <!-- ================================================================== -->
+
+<!-- ================================================================== -->
+<!-- ====================    POS SYSTEM SECTION   == ================== -->
+<!-- ================================================================== -->
+<div id="pos" class="hidden">
+    <div class="p-4 sm:p-6 lg:p-8 h-screen flex flex-col font-sans">
+        <!-- POS Header -->
+        <header class="mb-4">
+            <h1 class="text-3xl font-bold text-gray-900">Point of Sale</h1>
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200 mt-4">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button onclick="switchPosTab('register')" id="tab-register" class="pos-tab active">Register</button>
+                    <button onclick="switchPosTab('sales')" id="tab-sales" class="pos-tab">Sales History</button>
+                    <button onclick="switchPosTab('inventory')" id="tab-inventory" class="pos-tab">Inventory</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Tab Content: Register -->
+        <div id="content-register" class="pos-tab-content active flex-grow overflow-hidden">
+            <div class="grid grid-cols-3 gap-6 h-full">
+                <!-- Left Side: Product Grid -->
+                <div class="col-span-2 bg-white rounded-xl shadow-md flex flex-col overflow-hidden">
+                    <div class="p-4 border-b">
+                        <input type="text" id="pos-product-search" placeholder="Search products..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69]">
+                    </div>
+                    <div id="pos-product-grid" class="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
+                        <p class="col-span-full text-center text-gray-500">Loading products...</p>
+                    </div>
+                </div>
+                <!-- Right Side: Cart and Actions -->
+                <div class="col-span-1 bg-white rounded-xl shadow-md flex flex-col">
+                    <div class="p-6 border-b"><h3 class="text-xl font-semibold text-gray-900">Current Sale</h3></div>
+                    <div id="pos-cart-items" class="flex-grow p-4 space-y-3 overflow-y-auto">
+                        <p class="text-center text-gray-400 pt-4">Select a product to begin.</p>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50">
+                        <div class="space-y-2 mb-6">
+                            <div class="flex justify-between text-gray-600"><span>Subtotal</span><span id="pos-subtotal">₱0.00</span></div>
+                            <div class="flex justify-between text-xl font-bold text-gray-900"><span>Total</span><span id="pos-total">₱0.00</span></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="pos-clear-sale" class="w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-red-700 transition">Clear Sale</button>
+                            <button id="pos-record-sale" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition">Record Sale</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Sales History -->
+        <div id="content-sales" class="pos-tab-content flex-grow overflow-hidden bg-white rounded-xl shadow-md">
+            <div class="p-6 border-b"><h3 class="text-xl font-semibold text-gray-900">POS Sales History</h3></div>
+            <div class="overflow-y-auto h-full">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-history-body" class="divide-y divide-gray-200">
+                        <tr><td colspan="4" class="text-center py-10 text-gray-500">Loading sales history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: Inventory -->
+        <div id="content-inventory" class="pos-tab-content flex-grow overflow-hidden bg-white rounded-xl shadow-md">
+            <div class="p-6 border-b"><h3 class="text-xl font-semibold text-gray-900">Product Inventory</h3></div>
+            <div class="overflow-y-auto h-full">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Count</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body" class="divide-y divide-gray-200">
+                        <tr><td colspan="3" class="text-center py-10 text-gray-500">Loading inventory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ================================================================== -->
+<!-- ================== END OF POS SYSTEM SECTION  ==================== -->
+<!-- ================================================================== -->
+
 
 <!-- ================================================================== -->
 <!-- =================== PRODUCTS SECTION  ==================== -->
@@ -866,6 +962,7 @@ function showSection(id) {
       if (id === 'orders') fetchOrders();
       if (id === 'transactions') fetchTransactions();
       if (id === 'tracking') initializeTracking();
+      if (id === 'pos') initializePOS();
       // ADDED: This line initializes the analytics charts when the section is shown.
       if (id === 'analytics') initializeAnalyticsCharts(); 
       if (id === 'appointments' || id === 'orders' || id === 'products' || id === 'tracking') {
@@ -878,6 +975,258 @@ function showSection(id) {
       localStorage.removeItem('adminEmail');
       window.location.href = './index.html';
     }
+
+// ==================================================================
+    // =================== POINT OF SALE SCRIPT =========================
+    // ==================================================================
+    
+    let posAllProducts = [];
+    let posCartItems = [];
+    let isPOSInitialized = false;
+
+    function switchPosTab(tabName) {
+        document.querySelectorAll('.pos-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+
+        document.querySelectorAll('.pos-tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(`content-${tabName}`).classList.add('active');
+
+        if (tabName === 'sales') {
+            loadSalesHistory();
+        } else if (tabName === 'inventory') {
+            loadInventory();
+        }
+    }
+
+    async function loadSalesHistory() {
+        const tbody = document.getElementById('sales-history-body');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">Loading sales history...</td></tr>';
+        
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/square/sales', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.details || 'Failed to load sales history.');
+
+            if (!data.orders || data.orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">No sales have been recorded yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.orders.forEach(order => {
+                const row = tbody.insertRow();
+                const items = (order.line_items || []).map(item => `${item.name} x${item.quantity}`).join(', ');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(order.created_at).toLocaleString()}</td>
+                    <td class="px-6 py-4">${items}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₱${(order.total_money.amount / 100).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs">${order.id}</td>
+                `;
+            });
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
+        }
+    }
+
+    async function loadInventory() {
+        const tbody = document.getElementById('inventory-body');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-10 text-gray-500">Loading inventory...</td></tr>';
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/square/inventory', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if (!response.ok) throw new Error(data.error || 'Failed to load inventory data.');
+
+            if (!data.inventory || data.inventory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-10 text-gray-500">No inventory data found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.inventory.forEach(item => {
+                const row = tbody.insertRow();
+                const stock = parseInt(item.quantity, 10); 
+                const stockStatus = isNaN(stock) || stock <= 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium">${item.name}</td>
+                    <td class="px-6 py-4">${isNaN(stock) ? 'N/A' : stock}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${stockStatus}">
+                            ${isNaN(stock) || stock <= 0 ? 'Out of Stock' : 'In Stock'}
+                        </span>
+                    </td>
+                `;
+            });
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
+        }
+    }
+
+    function initializePOS() {
+        if (isPOSInitialized) {
+            fetchProductsFromBackend();
+            return;
+        }
+
+        const posProductGrid = document.getElementById('pos-product-grid');
+        const posClearSaleBtn = document.getElementById('pos-clear-sale');
+        const posRecordSaleBtn = document.getElementById('pos-record-sale');
+        const posSearchInput = document.getElementById('pos-product-search');
+
+        async function fetchProductsFromBackend() {
+            posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/square/products', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch products from your server.');
+                }
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                if (!data.objects || data.objects.length === 0) {
+                    posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found in Square.</p>`;
+                    return;
+                }
+
+                posAllProducts = data.objects.map(item => {
+                    const variation = item.item_data.variations[0]; 
+                    const priceData = variation.item_variation_data.price_money;
+                    return {
+                        id: variation.id, name: item.item_data.name,
+                        price: priceData ? Number(priceData.amount) / 100 : 0,
+                        imageUrl: 'https://placehold.co/150x150/E2E8F0/475569?text=No+Image'
+                    };
+                });
+                renderPOSProducts();
+            } catch (error) {
+                console.error('Error:', error);
+                posProductGrid.innerHTML = `<p class="col-span-full text-center text-red-500">Error: ${error.message}.</p>`;
+            }
+        }
+
+        function renderPOSProducts(filter = '') {
+            posProductGrid.innerHTML = '';
+            const filtered = posAllProducts.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+            if (filtered.length === 0) {
+                posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found.</p>`;
+                return;
+            }
+            filtered.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'pos-product-card';
+                card.innerHTML = `<img src="${product.imageUrl}" alt="${product.name}"><p class="name">${product.name}</p><p class="price">₱${product.price.toFixed(2)}</p>`;
+                card.addEventListener('click', () => addToPOSCart(product.id));
+                posProductGrid.appendChild(card);
+            });
+        }
+
+        function addToPOSCart(productId) {
+            const existingItem = posCartItems.find(item => item.id === productId);
+            if (existingItem) existingItem.quantity++;
+            else {
+                const product = posAllProducts.find(p => p.id === productId);
+                if (product) posCartItems.push({ ...product, quantity: 1 });
+            }
+            renderPOSCart();
+        }
+
+        function renderPOSCart() {
+            const container = document.getElementById('pos-cart-items');
+            container.innerHTML = '';
+            if (posCartItems.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 pt-4">Select a product to begin.</p>`;
+                updatePOSTotals(); return;
+            }
+            posCartItems.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'pos-cart-item';
+                itemEl.innerHTML = `
+                    <div class="name">${item.name}</div>
+                    <div class="quantity"><input type="number" value="${item.quantity}" min="1" onchange="updatePOSQuantity('${item.id}', this.value)"></div>
+                    <div class="price">₱${(item.price * item.quantity).toFixed(2)}</div>
+                    <div class="remove-btn" onclick="removeFromPOSCart('${item.id}')"><i data-feather="x-circle"></i></div>`;
+                container.appendChild(itemEl);
+            });
+            feather.replace();
+            updatePOSTotals();
+        }
+
+        function updatePOSTotals() {
+            const subtotal = posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('pos-subtotal').textContent = `₱${subtotal.toFixed(2)}`;
+            document.getElementById('pos-total').textContent = `₱${subtotal.toFixed(2)}`;
+        }
+        
+        async function recordPOSSale() {
+            if (posCartItems.length === 0) return alert("Please add products to the sale.");
+            
+            posRecordSaleBtn.disabled = true;
+            posRecordSaleBtn.textContent = 'Recording...';
+
+            const totalAmount = posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const saleData = { items: posCartItems, totalAmount: totalAmount };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/square/record-sale', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(saleData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || errorData.error || 'Failed to record sale.');
+                }
+                const result = await response.json();
+                alert(`Sale recorded successfully! Order ID: ${result.order.id}`);
+                clearPOSSale();
+            } catch (error) {
+                console.error('Failed to record sale:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                posRecordSaleBtn.disabled = false;
+                posRecordSaleBtn.textContent = 'Record Sale';
+            }
+        }
+        
+        window.updatePOSQuantity = (productId, newQuantity) => {
+            const item = posCartItems.find(i => i.id === productId);
+            if (item) item.quantity = Math.max(1, parseInt(newQuantity) || 1);
+            renderPOSCart();
+        };
+        window.removeFromPOSCart = (productId) => {
+            posCartItems = posCartItems.filter(item => item.id !== productId);
+            renderPOSCart();
+        };
+        const clearPOSSale = () => {
+            posCartItems = [];
+            renderPOSCart();
+        };
+
+        fetchProductsFromBackend();
+        posClearSaleBtn.addEventListener('click', clearPOSSale);
+        posRecordSaleBtn.addEventListener('click', recordPOSSale);
+        posSearchInput.addEventListener('input', (e) => renderPOSProducts(e.target.value));
+        isPOSInitialized = true;
+    }
+        
+// <!-- ================================================================== -->
+// <!-- ====================   POS END OF SCRIPT    ====================== -->
+// <!-- ================================================================== -->
+
 
 // <!-- ================================================================== -->
 // <!-- ==================== PRODUCT SCRIPT UPDATED ====================== -->
