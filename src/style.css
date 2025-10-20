@@ -1035,3 +1035,21 @@ td:last-child {
 .pos-tab-content.active {
     display: block;
 }
+.pos-product-card.out-of-stock {
+        cursor: not-allowed;
+        position: relative;
+        filter: grayscale(1);
+    }
+.pos-product-card.out-of-stock::after {
+        content: 'OUT OF STOCK';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }

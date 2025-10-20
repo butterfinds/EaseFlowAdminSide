@@ -90,6 +90,7 @@
       background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
+      z-index: 1000;
     }
     #editModal form {
       background: white;
@@ -206,7 +207,6 @@
         <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
-                <p class="mt-1 text-slate-500">Track, manage, and analyze your sales data with ease.</p>
             </div>
              <div class="flex items-center space-x-4">
                 <div id="live-clock" class="text-lg font-semibold text-slate-600"></div>
@@ -413,7 +413,6 @@
     <div class="p-4 sm:p-6 lg:p-8" style="padding: 0; max-width: 100%;">
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Product Upload</h1>
-            <p class="text-gray-500 mt-2">Manage your product listings by adding new items or editing existing ones.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -548,7 +547,6 @@
         <!-- PAGE HEADER UPDATED: PINK LINE REMOVED -->
         <header class="mb-8">
              <h1 class="text-3xl font-bold text-gray-900">Appointments</h1>
-            <p class="text-gray-500 mt-2">Manage custom requests and scheduled appointments.</p>
         </header>
 
         <!-- Main Content Grid -->
@@ -669,7 +667,6 @@
         <div>
             <header class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-800">Sales & Transactions</h1>
-                <p class="text-gray-500 mt-1">Manually record sales and view the complete transaction history.</p>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -799,7 +796,6 @@
         <!-- Header -->
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Sales Analytics</h1>
-            <p class="text-gray-500 mt-1">A visual overview of your sales performance.</p>
         </header>
 
         <!-- Main Charts Section -->
@@ -931,19 +927,28 @@
   </div>
 
 
-  <div id="editModal">
-    <form id="editForm" enctype="multipart/form-data">
-      <h3>Edit Product</h3>
-      <input type="hidden" id="editProductId" />
-      <input type="text" id="editName" placeholder="Product Name" required />
-      <input type="number" id="editprice" placeholder="Price (e.g. 99.99)" step="0.01" min="0" required />
-      <input type="number" id="editStock" placeholder="Stock" required />
-      <textarea id="editDescription" placeholder="Description" required></textarea>
-      <input type="file" id="editImage" accept="image/*" />
-      <button type="submit">Save</button>
-      <button type="button" onclick="closeEditModal()">Cancel</button>
-    </form>
-  </div>
+<div id="editModal">
+    <form id="editForm" enctype="multipart/form-data">
+      <h3>Edit Product</h3>
+      <input type="hidden" id="editProductId" />
+            <input type="hidden" id="editSquareId" />
+      <input type="text" id="editName" placeholder="Product Name" required />
+      <input type="number" id="editprice" placeholder="Price (e.g. 99.99)" step="0.01" min="0" required />
+      <input type="number" id="editStock" placeholder="Stock" required />
+      <textarea id="editDescription" placeholder="Description" required></textarea>
+      <select id="editCategory" required>
+        <option value="">Select Category</option>
+        <option value="1">Jerseys</option>
+        <option value="2">Shirts</option>
+        <option value="3">Shorts</option>
+        <option value="4">Jackets</option>
+        <option value="5">Others</option>
+      </select>
+      <input type="file" id="editImage" accept="image/*" />
+      <button type="submit">Save</button>
+      <button type="button" onclick="closeEditModal()">Cancel</button>
+    </form>
+  </div>
 
   <div id="toast-notification">
       <p id="toast-message"></p>
@@ -979,249 +984,354 @@ function showSection(id) {
 // ==================================================================
     // =================== POINT OF SALE SCRIPT =========================
     // ==================================================================
+let posAllProducts = [];
+let posCartItems = [];
+let isPOSInitialized = false;
+
+function switchPosTab(tabName) {
+    document.querySelectorAll('.pos-tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+    document.querySelectorAll('.pos-tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`content-${tabName}`).classList.add('active');
+
+    if (tabName === 'sales') {
+        loadSalesHistory();
+    } else if (tabName === 'inventory') {
+        loadInventory();
+    }
+}
+
+async function loadSalesHistory() {
+    const tbody = document.getElementById('sales-history-body');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">Loading sales history...</td></tr>';
     
-    let posAllProducts = [];
-    let posCartItems = [];
-    let isPOSInitialized = false;
+    // **UPDATE:** Removed the "Actions" column from the header
+    const theadRow = document.querySelector('#content-sales thead tr');
+    theadRow.innerHTML = `
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+    `;
+    
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/square/sales', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
 
-    function switchPosTab(tabName) {
-        document.querySelectorAll('.pos-tab').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-
-        document.querySelectorAll('.pos-tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById(`content-${tabName}`).classList.add('active');
-
-        if (tabName === 'sales') {
-            loadSalesHistory();
-        } else if (tabName === 'inventory') {
-            loadInventory();
-        }
-    }
-
-    async function loadSalesHistory() {
-        const tbody = document.getElementById('sales-history-body');
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">Loading sales history...</td></tr>';
+        if (!response.ok) throw new Error(data.details || 'Failed to load sales history.');
         
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/square/sales', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+        const activeOrders = data.orders ? data.orders.filter(order => order.state !== 'CANCELED') : [];
 
-            if (!response.ok) throw new Error(data.details || 'Failed to load sales history.');
-
-            if (!data.orders || data.orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">No sales have been recorded yet.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = '';
-            data.orders.forEach(order => {
-                const row = tbody.insertRow();
-                const items = (order.line_items || []).map(item => `${item.name} x${item.quantity}`).join(', ');
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${new Date(order.created_at).toLocaleString()}</td>
-                    <td class="px-6 py-4">${items}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">₱${(order.total_money.amount / 100).toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-xs">${order.id}</td>
-                `;
-            });
-        } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
-        }
-    }
-
-    async function loadInventory() {
-        const tbody = document.getElementById('inventory-body');
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-10 text-gray-500">Loading inventory...</td></tr>';
-
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/square/inventory', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            
-            if (!response.ok) throw new Error(data.error || 'Failed to load inventory data.');
-
-            if (!data.inventory || data.inventory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-10 text-gray-500">No inventory data found.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = '';
-            data.inventory.forEach(item => {
-                const row = tbody.insertRow();
-                const stock = parseInt(item.quantity, 10); 
-                const stockStatus = isNaN(stock) || stock <= 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-medium">${item.name}</td>
-                    <td class="px-6 py-4">${isNaN(stock) ? 'N/A' : stock}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${stockStatus}">
-                            ${isNaN(stock) || stock <= 0 ? 'Out of Stock' : 'In Stock'}
-                        </span>
-                    </td>
-                `;
-            });
-        } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
-        }
-    }
-
-    function initializePOS() {
-        if (isPOSInitialized) {
-            fetchProductsFromBackend();
+        if (activeOrders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">No active sales have been recorded yet.</td></tr>';
             return;
         }
 
-        const posProductGrid = document.getElementById('pos-product-grid');
-        const posClearSaleBtn = document.getElementById('pos-clear-sale');
-        const posRecordSaleBtn = document.getElementById('pos-record-sale');
-        const posSearchInput = document.getElementById('pos-product-search');
+        tbody.innerHTML = '';
+        activeOrders.forEach(order => {
+            const row = tbody.insertRow();
+            const items = (order.line_items || []).map(item => `${item.name} x${item.quantity}`).join(', ');
+            
+            // **UPDATE:** Removed the "Actions" cell and "Cancel" button
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${new Date(order.created_at).toLocaleString()}</td>
+                <td class="px-6 py-4">${items}</td>
+                <td class="px-6 py-4 whitespace-nowrap">₱${(order.total_money.amount / 100).toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${order.id}</td>
+            `;
+        });
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
+    }
+}
 
-        async function fetchProductsFromBackend() {
-            posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
-            try {
-                const response = await fetch('http://127.0.0.1:8000/api/square/products', {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to fetch products from your server.');
-                }
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
+async function loadInventory() {
+    const tbody = document.getElementById('inventory-body');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">Loading inventory...</td></tr>';
 
-                if (!data.objects || data.objects.length === 0) {
-                    posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found in Square.</p>`;
-                    return;
-                }
+    const theadRow = document.querySelector('#content-inventory thead tr');
+    theadRow.innerHTML = `
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Count</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+    `;
 
-                posAllProducts = data.objects.map(item => {
-                    const variation = item.item_data.variations[0]; 
-                    const priceData = variation.item_variation_data.price_money;
-                    return {
-                        id: variation.id, name: item.item_data.name,
-                        price: priceData ? Number(priceData.amount) / 100 : 0,
-                        imageUrl: 'https://placehold.co/150x150/E2E8F0/475569?text=No+Image'
-                    };
-                });
-                renderPOSProducts();
-            } catch (error) {
-                console.error('Error:', error);
-                posProductGrid.innerHTML = `<p class="col-span-full text-center text-red-500">Error: ${error.message}.</p>`;
-            }
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/square/inventory', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error || 'Failed to load inventory data.');
+
+        if (!data.inventory || data.inventory.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-500">No inventory data found.</td></tr>';
+            return;
         }
 
-        function renderPOSProducts(filter = '') {
-            posProductGrid.innerHTML = '';
-            const filtered = posAllProducts.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
-            if (filtered.length === 0) {
-                posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found.</p>`;
+        tbody.innerHTML = '';
+        data.inventory.forEach(item => {
+            const row = tbody.insertRow();
+            const stock = parseInt(item.quantity, 10); 
+            const stockStatus = isNaN(stock) || stock <= 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 font-medium">${item.name}</td>
+                <td class="px-6 py-4">${isNaN(stock) ? 'N/A' : stock}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${stockStatus}">${isNaN(stock) || stock <= 0 ? 'Out of Stock' : 'In Stock'}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${item.local_id ? `<button onclick="deleteProduct(${item.local_id})" class="text-red-600 hover:text-red-800">Delete</button>` : ''}
+                </td>
+            `;
+        });
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function initializePOS() {
+    if (isPOSInitialized) {
+        fetchProductsFromBackend();
+        return;
+    }
+
+    const posProductGrid = document.getElementById('pos-product-grid');
+    const posClearSaleBtn = document.getElementById('pos-clear-sale');
+    const posRecordSaleBtn = document.getElementById('pos-record-sale');
+    const posSearchInput = document.getElementById('pos-product-search');
+
+    async function fetchProductsFromBackend() {
+        posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
+        try {
+            // **MODIFIED**: Fetch both Square products and local product stock in parallel
+            const [squareResponse, localResponse] = await Promise.all([
+                fetch('http://127.0.0.1:8000/api/square/products', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                }),
+                fetch('http://127.0.0.1:8000/api/admin/products', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
+            
+            if (!squareResponse.ok) {
+                const errorData = await squareResponse.json();
+                throw new Error(errorData.error || 'Failed to fetch products from Square.');
+            }
+            const squareData = await squareResponse.json();
+            const localProducts = localResponse.ok ? await localResponse.json() : [];
+
+            // **NEW**: Create a map of local product stock for easy lookup
+            const localProductStock = new Map(localProducts.map(p => [p.name, p.stock]));
+
+            if (squareData.error) throw new Error(squareData.error);
+
+            if (!squareData.objects || squareData.objects.length === 0) {
+                posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found in Square.</p>`;
+                return;
+            }
+
+            posAllProducts = squareData.objects.map(item => {
+                const variation = item.item_data.variations[0]; 
+                const priceData = variation.item_variation_data.price_money;
+                return {
+                    id: variation.id, 
+                    name: item.item_data.name,
+                    price: priceData ? Number(priceData.amount) / 100 : 0,
+                    imageUrl: item.image_url || 'https://placehold.co/150x150/E2E8F0/475569?text=No+Image',
+                    stock: localProductStock.get(item.item_data.name) || 0 // **NEW**: Add stock property
+                };
+            });
+            renderPOSProducts();
+        } catch (error) {
+            console.error('Error:', error);
+            posProductGrid.innerHTML = `<p class="col-span-full text-center text-red-500">Error: ${error.message}.</p>`;
+        }
+    }
+
+    function renderPOSProducts(filter = '') {
+        posProductGrid.innerHTML = '';
+        const filtered = posAllProducts.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+        if (filtered.length === 0) {
+            posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found.</p>`;
+            return;
+        }
+        filtered.forEach(product => {
+            // **MODIFIED**: Add visual indicators and logic for out-of-stock items
+            const card = document.createElement('div');
+            card.className = 'pos-product-card';
+            if (product.stock <= 0) {
+                card.classList.add('out-of-stock');
+            }
+            card.innerHTML = `<img src="${product.imageUrl}" alt="${product.name}"><p class="name">${product.name}</p><p class="price">₱${product.price.toFixed(2)}</p>`;
+            card.addEventListener('click', () => {
+                if (product.stock > 0) {
+                    addToPOSCart(product.id);
+                } else {
+                    alert('This product is out of stock.');
+                }
+            });
+            posProductGrid.appendChild(card);
+        });
+    }
+
+    function addToPOSCart(productId) {
+        // **MODIFIED**: Check stock before adding or incrementing quantity
+        const product = posAllProducts.find(p => p.id === productId);
+        if (!product) return;
+        
+        const existingItem = posCartItems.find(item => item.id === productId);
+        if (existingItem) {
+            if (existingItem.quantity >= product.stock) {
+                alert(`Stock limit reached for ${product.name}. Only ${product.stock} items available.`);
                 return;
             }
-            filtered.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'pos-product-card';
-                card.innerHTML = `<img src="${product.imageUrl}" alt="${product.name}"><p class="name">${product.name}</p><p class="price">₱${product.price.toFixed(2)}</p>`;
-                card.addEventListener('click', () => addToPOSCart(product.id));
-                posProductGrid.appendChild(card);
-            });
-        }
-
-        function addToPOSCart(productId) {
-            const existingItem = posCartItems.find(item => item.id === productId);
-            if (existingItem) existingItem.quantity++;
-            else {
-                const product = posAllProducts.find(p => p.id === productId);
-                if (product) posCartItems.push({ ...product, quantity: 1 });
+            existingItem.quantity++;
+        } else {
+            if (product.stock <= 0) {
+                alert(`${product.name} is out of stock.`);
+                return;
             }
-            renderPOSCart();
+            posCartItems.push({ ...product, quantity: 1 });
+        }
+        renderPOSCart();
+    }
+
+    function renderPOSCart() {
+        const container = document.getElementById('pos-cart-items');
+        container.innerHTML = '';
+        if (posCartItems.length === 0) {
+            container.innerHTML = `<p class="text-center text-gray-400 pt-4">Select a product to begin.</p>`;
+            updatePOSTotals(); return;
+        }
+        posCartItems.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'pos-cart-item';
+            itemEl.innerHTML = `
+                <div class="name">${item.name}</div>
+                                <div class="quantity"><input type="number" value="${item.quantity}" min="1" onchange="updatePOSQuantity('${item.id}', this)"></div>
+                <div class="price">₱${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="remove-btn" onclick="removeFromPOSCart('${item.id}')"><i data-feather="x-circle"></i></div>`;
+            container.appendChild(itemEl);
+        });
+        feather.replace();
+        updatePOSTotals();
+    }
+
+    function updatePOSTotals() {
+        const subtotal = posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        document.getElementById('pos-subtotal').textContent = `₱${subtotal.toFixed(2)}`;
+        document.getElementById('pos-total').textContent = `₱${subtotal.toFixed(2)}`;
+    }
+    
+    async function recordPOSSale() {
+        if (posCartItems.length === 0) {
+            alert("Please add products to the sale.");
+            return;
         }
 
-        function renderPOSCart() {
-            const container = document.getElementById('pos-cart-items');
-            container.innerHTML = '';
-            if (posCartItems.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-400 pt-4">Select a product to begin.</p>`;
-                updatePOSTotals(); return;
-            }
-            posCartItems.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'pos-cart-item';
-                itemEl.innerHTML = `
-                    <div class="name">${item.name}</div>
-                    <div class="quantity"><input type="number" value="${item.quantity}" min="1" onchange="updatePOSQuantity('${item.id}', this.value)"></div>
-                    <div class="price">₱${(item.price * item.quantity).toFixed(2)}</div>
-                    <div class="remove-btn" onclick="removeFromPOSCart('${item.id}')"><i data-feather="x-circle"></i></div>`;
-                container.appendChild(itemEl);
+        posRecordSaleBtn.disabled = true;
+        posRecordSaleBtn.textContent = 'Recording...';
+
+        const saleData = {
+            items: posCartItems,
+            totalAmount: posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        };
+
+        try {
+            const squareResponse = await fetch('http://127.0.0.1:8000/api/square/record-sale', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(saleData)
             });
-            feather.replace();
-            updatePOSTotals();
-        }
 
-        function updatePOSTotals() {
-            const subtotal = posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            document.getElementById('pos-subtotal').textContent = `₱${subtotal.toFixed(2)}`;
-            document.getElementById('pos-total').textContent = `₱${subtotal.toFixed(2)}`;
-        }
-        
-        async function recordPOSSale() {
-            if (posCartItems.length === 0) return alert("Please add products to the sale.");
-            
-            posRecordSaleBtn.disabled = true;
-            posRecordSaleBtn.textContent = 'Recording...';
+            if (!squareResponse.ok) {
+                const errorData = await squareResponse.json();
+                throw new Error(errorData.details || 'Failed to record sale with Square.');
+            }
+            const squareResult = await squareResponse.json();
 
-            const totalAmount = posCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const saleData = { items: posCartItems, totalAmount: totalAmount };
+            const localStockResponse = await fetch('http://127.0.0.1:8000/api/admin/products/record-sale', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ items: saleData.items })
+            });
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/api/square/record-sale', {
+            if (!localStockResponse.ok) {
+                console.error('Failed to update local stock, but Square sale was successful.');
+            }
+
+            const transactionPromises = posCartItems.map(item => {
+                const transactionData = {
+                    item_name: item.name,
+                    unit_price: item.price,
+                    quantity: item.quantity,
+                    order_status: 'Successful',
+                    payment_status: 'Done'
+                };
+                return fetch('http://127.0.0.1:8000/api/transactions', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(saleData)
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(transactionData)
                 });
+            });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.details || errorData.error || 'Failed to record sale.');
-                }
-                const result = await response.json();
-                alert(`Sale recorded successfully! Order ID: ${result.order.id}`);
-                clearPOSSale();
-            } catch (error) {
-                console.error('Failed to record sale:', error);
-                alert(`Error: ${error.message}`);
-            } finally {
-                posRecordSaleBtn.disabled = false;
-                posRecordSaleBtn.textContent = 'Record Sale';
+            await Promise.all(transactionPromises);
+            console.log('POS sale successfully recorded in the main transactions table.');
+
+            if (typeof fetchTransactions === 'function') {
+                fetchTransactions();
             }
-        }
-        
-        window.updatePOSQuantity = (productId, newQuantity) => {
-            const item = posCartItems.find(i => i.id === productId);
-            if (item) item.quantity = Math.max(1, parseInt(newQuantity) || 1);
-            renderPOSCart();
-        };
-        window.removeFromPOSCart = (productId) => {
-            posCartItems = posCartItems.filter(item => item.id !== productId);
-            renderPOSCart();
-        };
-        const clearPOSSale = () => {
-            posCartItems = [];
-            renderPOSCart();
-        };
+            
+            alert(`Sale recorded successfully! Order ID: ${squareResult.order.id}`);
+            clearPOSSale();
+            loadInventory();
 
-        fetchProductsFromBackend();
-        posClearSaleBtn.addEventListener('click', clearPOSSale);
-        posRecordSaleBtn.addEventListener('click', recordPOSSale);
-        posSearchInput.addEventListener('input', (e) => renderPOSProducts(e.target.value));
-        isPOSInitialized = true;
+        } catch (error) {
+            console.error('Failed to record sale:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            posRecordSaleBtn.disabled = false;
+            posRecordSaleBtn.textContent = 'Record Sale';
+        }
     }
+    
+    // **MODIFIED**: This function now validates quantity against stock
+    window.updatePOSQuantity = (productId, inputElement) => {
+        const item = posCartItems.find(i => i.id === productId);
+        const product = posAllProducts.find(p => p.id === productId);
+        let newQuantity = parseInt(inputElement.value) || 1;
+
+        if (product && newQuantity > product.stock) {
+            alert(`Stock limit reached. Only ${product.stock} items available for ${product.name}.`);
+            newQuantity = product.stock;
+            inputElement.value = newQuantity; // Correct the input value in the UI
+        }
+
+        if (item) {
+            item.quantity = Math.max(1, newQuantity);
+        }
+        renderPOSCart();
+    };
+
+    window.removeFromPOSCart = (productId) => {
+        posCartItems = posCartItems.filter(item => item.id !== productId);
+        renderPOSCart();
+    };
+    const clearPOSSale = () => {
+        posCartItems = [];
+        renderPOSCart();
+    };
+
+    fetchProductsFromBackend();
+    posClearSaleBtn.addEventListener('click', clearPOSSale);
+    posRecordSaleBtn.addEventListener('click', recordPOSSale);
+    posSearchInput.addEventListener('input', (e) => renderPOSProducts(e.target.value));
+    isPOSInitialized = true;
+}
+
+
         
 // <!-- ================================================================== -->
 // <!-- ====================   POS END OF SCRIPT    ====================== -->
@@ -1328,64 +1438,81 @@ async function loadProducts() {
     feather.replace(); // INITIALIZE ICONS
 }
 
-    function editProduct(id) {
-      fetch('http://127.0.0.1:8000/api/admin/products', {
+function editProduct(id) {
+    fetch('http://127.0.0.1:8000/api/admin/products', {
         headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => res.json())
-      .then(products => {
+    })
+    .then(res => res.json())
+    .then(products => {
         const p = products.find(prod => prod.id === id);
-        if (!p) return alert('Product not found.');
+        if (!p) {
+            alert('Product not found.');
+            return;
+        }
+
         document.getElementById('editProductId').value = p.id;
         document.getElementById('editName').value = p.name;
         document.getElementById('editprice').value = p.price;
         document.getElementById('editStock').value = p.stock;
         document.getElementById('editDescription').value = p.description;
+        document.getElementById('editCategory').value = p.category_id;  
+        document.getElementById('editSquareId').value = p.square_item_id || ''; 
         document.getElementById('editModal').style.display = 'flex';
-      });
-    }
+    })
+    .catch(err => {
+        console.error("Error fetching product data:", err);
+        alert("Could not load product data for editing.");
+    });
+}
 
     function closeEditModal() {
       document.getElementById('editModal').style.display = 'none';
     }
 
+// Your submit function is correct and does NOT need to be changed.
 document.getElementById('editForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const id = document.getElementById('editProductId').value;
-  const formData = new FormData();
-  formData.append('name', document.getElementById('editName').value);
-  formData.append('price', document.getElementById('editprice').value);
-  formData.append('stock', document.getElementById('editStock').value);
-  formData.append('description', document.getElementById('editDescription').value);
+    const id = document.getElementById('editProductId').value;
+    const formData = new FormData();
+    formData.append('name', document.getElementById('editName').value);
+    formData.append('price', document.getElementById('editprice').value);
+    formData.append('stock', document.getElementById('editStock').value);
+    formData.append('description', document.getElementById('editDescription').value);
+    formData.append('category_id', document.getElementById('editCategory').value);
+    formData.append('square_id', document.getElementById('editSquareId').value);
 
-  const newImage = document.getElementById('editImage').files[0];
-  if (newImage) {
-    formData.append('image', newImage);
-  }
-  formData.append('_method', 'PUT');
-
-  try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.message || 'Failed to update product');
+    const newImage = document.getElementById('editImage').files[0];
+    if (newImage) {
+        formData.append('image', newImage);
     }
+    formData.append('_method', 'PUT');
 
-    closeEditModal();
-    loadProducts();
-    alert('Product updated successfully!');
-  } catch (err) {
-    console.error('Update error:', err);
-    alert('Error updating product: ' + err.message);
-  }
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            const errorResult = await res.json();
+            throw new Error(errorResult.message || 'Failed to update product');
+        }
+        
+        await res.json();
+
+        closeEditModal();
+        loadProducts(); 
+        initializePOS(); 
+        alert('Product updated successfully!');
+    } catch (err) {
+        console.error('Update error:', err);
+        alert('Error updating product: ' + err.message);
+    }
 });
 
 
