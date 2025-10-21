@@ -504,9 +504,9 @@
 
         <div class="mb-6">
              <button onclick="fetchOrders()" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
-                <i data-feather="refresh-cw" class="w-4 h-4"></i>
-                <span>Refresh</span>
-            </button>
+                 <i data-feather="refresh-cw" class="w-4 h-4"></i>
+                 <span>Refresh</span>
+             </button>
         </div>
 
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -519,14 +519,15 @@
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Proof</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>
-                    </tbody>
+                        <tr><td colspan="9" class="text-center py-6">Loading orders...</td></tr>
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -2262,8 +2263,12 @@ async function deleteTransaction(id) {
         // Donut Chart
         const donutCanvas = document.getElementById('salesDonutChart');
         if (donutCanvas) {
-            donutCanvas.parentElement.style.height = '330px';
-            donutCanvas.parentElement.style.width = '330px';
+            // REMOVED fixed sizing. The chart will now rely on its container's CSS.
+            // If the chart does not display or is too small, ensure the parent 
+            // container (where salesDonutChart is located) has fluid width/height 
+            // utility classes (e.g., 'w-full h-80').
+            // donutCanvas.parentElement.style.height = '330px';
+            // donutCanvas.parentElement.style.width = '330px';
         }
 
         const donutCtx = donutCanvas?.getContext('2d');
@@ -2285,7 +2290,7 @@ async function deleteTransaction(id) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '80%', // increased from 65% to make the ring thinner
+                    cutout: '80%', // keeps the visual style of a thin ring
                     plugins: {
                         legend: { display: false },
                         datalabels: { display: false }
@@ -2953,7 +2958,8 @@ async function rejectAppointment(id) {
 // Orders
 async function fetchOrders() {
     const ordersTableBody = document.querySelector('#ordersTable tbody');
-    ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">Loading orders...</td></tr>';
+    // **UPDATE:** Increased colspan from 8 to 9
+    ordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-6">Loading orders...</td></tr>';
 
     try {
         const token = localStorage.getItem('adminToken');
@@ -2963,106 +2969,151 @@ async function fetchOrders() {
             }
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         console.log("Fetched orders:", data);
 
+        if (!Array.isArray(data)) {
+             console.error("Fetched data is not an array:", data);
+             // **UPDATE:** Increased colspan from 8 to 9
+             ordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-6">Error: Invalid data format received.</td></tr>';
+             return;
+        }
+
+
         if (data.length === 0) {
-            ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">No orders found.</td></tr>';
+            // **UPDATE:** Increased colspan from 8 to 9
+            ordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-6">No orders found.</td></tr>';
             return;
         }
 
-        ordersTableBody.innerHTML = '';
+        // **UPDATE:** Add "Payment Proof" header
+        const thead = document.querySelector('#ordersTable thead tr');
+        thead.innerHTML = `
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Proof</th> <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        `;
+
+        ordersTableBody.innerHTML = ''; // Clear loading state
         data.forEach(order => {
-            // STATUS BADGE LOGIC
+            // STATUS BADGE LOGIC (no changes needed)
             let statusBadge;
-            switch (order.status) {
-                case 'Approved':
+            const normalizedStatus = (order.status || 'pending').toLowerCase(); // Default to pending if null/undefined
+            switch (normalizedStatus) {
+                case 'approved':
                     statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>`;
                     break;
-                case 'Rejected':
+                case 'rejected':
                     statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>`;
                     break;
-                default:
-                    statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>`;
+                case 'for_verification': // Added this status
+                     statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">For Verification</span>`;
+                     break;
+                default: // Handles 'pending' and any other unexpected values
+                    statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Payment</span>`;
             }
 
-            // FORMAT CREATED_AT DATE
+
+            // FORMAT CREATED_AT DATE (no changes needed)
             const createdAt = new Date(order.created_at).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                month: 'short', day: 'numeric', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             });
 
-            // FORMAT ITEMS
-            const items = order.items.map(i => `${i.product.name} x${i.quantity}`).join('<br>');
+            // FORMAT ITEMS (no changes needed)
+            // Ensure order.items is an array and each item has product.name
+             const items = Array.isArray(order.items)
+                ? order.items.map(i => `${i.product?.name || 'Unknown Product'} x${i.quantity}`).join('<br>')
+                : 'N/A';
+
+
+            // **UPDATE:** Add logic for Payment Proof link
+            let paymentProofHtml = '<span class="text-gray-400">N/A</span>';
+            if (order.payment_screenshot_path) {
+                // Assuming your Laravel backend serves storage files correctly via the symlink
+                const screenshotUrl = `http://127.0.0.1:8000/storage/${order.payment_screenshot_path}`;
+                 paymentProofHtml = `
+                    <a href="${screenshotUrl}" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        <i data-feather="image" class="w-4 h-4"></i> View
+                    </a>
+                    <div class="text-xs text-gray-500 mt-1">Ref: ${order.payment_reference_no || 'None'}</div>`; // Also show ref number
+            } else if (normalizedStatus === 'for_verification') {
+                 // If status is for_verification but somehow path is missing
+                 paymentProofHtml = '<span class="text-red-500 text-xs">Missing Proof</span>';
+            }
+
 
             // ACTIONS LOGIC
             let actions = '';
-            const normalizedStatus = (order.status || '').toLowerCase();
-
-            if (normalizedStatus === 'pending') {
-                 // UI UPDATE: BIGGER BUTTONS WITH ICONS
-                actions += `
-                    <button onclick="updateOrderStatus(${order.id}, 'Approved')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
-                        <i data-feather="check" class="w-4 h-4"></i> Approve
+            // Allow approve/reject only if status is 'for_verification'
+             if (normalizedStatus === 'for_verification') {
+                 actions += `
+                    <button onclick="updateOrderStatus(${order.id}, 'Approved')" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                        <i data-feather="check" class="w-4 h-4"></i> Approve Payment
                     </button>
-                    <button onclick="updateOrderStatus(${order.id}, 'Rejected')" class="inline-flex items-center gap-3 px-5 py-3 text-xs font-medium text-white bg-gray-500 rounded-lg hover:bg-gray-600">
-                        <i data-feather="x" class="w-4 h-4"></i> Reject
+                    <button onclick="updateOrderStatus(${order.id}, 'Rejected')" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 mt-1">
+                        <i data-feather="x" class="w-4 h-4"></i> Reject Payment
                     </button>
                 `;
+            } else if (normalizedStatus === 'approved' || normalizedStatus === 'rejected') {
+                // If already approved or rejected, show the status clearly, maybe allow reverting?
+                actions += `
+                     <span class="text-xs font-semibold ${normalizedStatus === 'approved' ? 'text-green-700' : 'text-red-700'}">
+                        Payment ${normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)}
+                    </span>
+                    `;
             } else {
-                // UI UPDATE: DROPDOWN SAME SIZE AS BUTTONS
-                actions += `
-                    <div class="relative inline-flex items-center">
-                        <i data-feather="${order.status === 'Approved' ? 'check' : 'x'}" class="absolute left-4 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
-                        <select onchange="handleEditStatus(${order.id}, this.value)" 
-                            class="appearance-none pl-10 pr-10 py-3 text-xs font-medium rounded-lg border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 
-                            ${order.status === 'Approved' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-red-100 text-red-800 font-semibold'}">
-                            <option value="Approved" ${order.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                            <option value="Rejected" ${order.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-                        </select>
-                        <i data-feather="chevron-down" class="absolute right-3 w-4 h-4 pointer-events-none ${order.status === 'Approved' ? 'text-green-800' : 'text-red-800'}"></i>
-                    </div>
-                `;
+                 // For 'pending_payment' or other statuses
+                 actions += '<span class="text-xs text-gray-400">Awaiting Payment</span>';
             }
 
-            // UI UPDATE: BIGGER DELETE BUTTON
+
+            // Add delete button regardless of status
             actions += `
-                <button onclick="deleteOrder(${order.id})" class="inline-flex items-center justify-center p-3 text-gray-500 bg-gray-100 rounded-lg hover:bg-red-100 hover:text-red-600" title="Delete">
+                <button onclick="deleteOrder(${order.id})" class="inline-flex items-center justify-center p-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-red-100 hover:text-red-600 ml-2 mt-1" title="Delete Order">
                      <i data-feather="trash-2" class="w-4 h-4"></i>
-                </button>
+                 </button>
             `;
 
-            // NEW ROW STRUCTURE
+
+            // **UPDATE:** Added the new paymentProofHtml cell
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="px-6 py-6 whitespace-nowrap">
                     <div class="flex items-center">
                         <span class="text-sm font-medium text-gray-900">${order.order_id}</span>
-                        <button onclick="copyOrderId('${order.order_id}', this)" class="ml-3 text-gray-400 hover:text-blue-600" title="Copy ID">
+                        <button onclick="copyOrderId('${order.order_id}', this)" class="ml-2 text-gray-400 hover:text-blue-600" title="Copy ID">
                             <i data-feather="copy" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </td>
                 <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-800">${order.delivery_name ?? order.user?.name ?? 'Unknown'}</td>
                 <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${order.delivery_phone ?? 'N/A'}</td>
-                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 font-semibold">₱${order.total}</td>
-                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${items}</td>
-                <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 font-semibold">₱${parseFloat(order.total || 0).toFixed(2)}</td>
+                <td class="px-6 py-6 text-sm text-gray-500">${items}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm">${paymentProofHtml}</td> <td class="px-6 py-6 whitespace-nowrap">${statusBadge}</td>
                 <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">${createdAt}</td>
-                <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-x-2">${actions}</td>
+                <td class="px-6 py-6 whitespace-nowrap text-sm font-medium space-y-1">${actions}</td>
             `;
             ordersTableBody.appendChild(row);
         });
-        
+
         // RE-INITIALIZE FEATHER ICONS AFTER ROWS ARE ADDED
         feather.replace();
 
     } catch (error) {
         console.error("Error fetching orders:", error);
-        ordersTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-6">Error loading orders.</td></tr>';
+        // **UPDATE:** Increased colspan from 8 to 9
+        ordersTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-red-500">Error loading orders: ${error.message}</td></tr>`;
     }
 }
 
@@ -3125,12 +3176,22 @@ async function updateOrderStatus(orderId, status) {
 
       const message = `Hello ${order.delivery_name ?? order.user?.name ?? 'Customer'}, your order ${order.order_id} has been ${status}.`;
       if (order.delivery_phone) {
+        
+        // --- START OF UPDATED SMS LOGIC ---
         try {
-          window.electronAPI.sendSMS(order.delivery_phone, message);
-          console.log(`SMS sent to ${order.delivery_phone}`);
+          // Add 'await' and get the 'result'
+          const smsResult = await window.electronAPI.sendSMS(order.delivery_phone, message);
+          
+          if (smsResult.success) {
+            console.log(`Main process confirmed SMS sent to ${smsResult.phone}`);
+          } else {
+            console.error(`Main process reported SMS error: ${smsResult.error}`);
+          }
         } catch (smsError) {
-          console.error('Failed to send SMS:', smsError);
+          console.error('Failed to invoke SMS bridge:', smsError);
         }
+        // --- END OF UPDATED SMS LOGIC ---
+
       } else {
         console.warn('No phone number found for this order.');
       }

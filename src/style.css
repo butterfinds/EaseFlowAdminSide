@@ -954,8 +954,6 @@ td:last-child {
         pointer-events: none;
     }
 
-/* git add ../src/dashboard.html ../src/style.css */
-
 /* --- POS SYSTEM STYLES --- */
 .pos-product-card {
     border: 1px solid #e5e7eb;
@@ -1053,3 +1051,5 @@ td:last-child {
         font-weight: bold;
         font-size: 0.8rem;
     }
+
+    /* git add ../src/dashboard.html ../src/style.css */
