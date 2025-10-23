@@ -19,8 +19,9 @@
   <!-- PDF Generation Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-
+  
+  <!-- Excel Generation Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Your Custom Stylesheet (Last) -->
   <link rel="stylesheet" href="style.css" />
 
@@ -214,6 +215,10 @@
                     <button onclick="showSection('transactions')" class="font-semibold text-sm bg-[#EF534F] text-white py-2 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EF534F] transition">
                         + Add Sale
                     </button>
+
+                    <button id="exportReportBtn" class="font-semibold text-sm bg-slate-600 text-white py-2 px-4 rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-600 transition">
+                        <i class="fas fa-file-export mr-2"></i> Export Report
+                    </button>
                 </div>
             </div>
         </header>
@@ -266,50 +271,105 @@
             </div>
         </div>
 
-        <!-- Main content grid -->
-        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <!-- WIDGET: Recent Activity -->
-            <div class="widget lg:col-span-2">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Activity</h2>
-                <ul id="activity-feed" class="divide-y divide-slate-100">
-                    <!-- Activity items will be dynamically inserted here -->
-                     <li class="flex items-center justify-center text-slate-500 py-10">Loading activities...</li>
-                </ul>
-            </div>
+    <div class="widget lg:col-span-2">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Activity</h2>
+        <ul id="activity-feed" class="divide-y divide-slate-100">
+            <li class="flex items-center justify-center text-slate-500 py-10">Loading activities...</li>
+        </ul>
+    </div>
 
-            <!-- NEW WIDGET: Sales Overview (Chart + Legend) -->
-            <div class="widget lg:col-span-2">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Overview</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                    <div class="relative h-48 w-48 mx-auto">
-                        <canvas id="salesDonutChart"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
-                            <div>
-                                <span id="total-sales-value" class="text-3xl font-bold text-slate-800"></span>
-                                <span class="text-sm text-slate-500 block">Total Items Sold</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="sales-legend" class="space-y-2">
-                        <!-- Legend items will be dynamically inserted here -->
+    <div class="widget lg:col-span-2">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Overview</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div class="relative h-48 w-48 mx-auto">
+                <canvas id="salesDonutChart"></canvas>
+                <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
+                    <div>
+                        <span id="total-sales-value" class="text-3xl font-bold text-slate-800"></span>
+                        <span class="text-sm text-slate-500 block">Total Items Sold</span>
                     </div>
                 </div>
             </div>
-
-            <!-- WIDGET: Sales Volume (Bar Chart) -->
-            <div class="widget lg:col-span-4">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Volume</h2>
-                <div class="h-64">
-                    <canvas id="salesBarChart"></canvas>
+            <div id="sales-legend" class="space-y-2">
                 </div>
-            </div>
-        </main>
+        </div>
+    </div>
+
+    <div class="widget lg:col-span-2">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Volume</h2>
+        <div class="h-64">
+            <canvas id="salesBarChart"></canvas>
+        </div>
+    </div>
+
+    <div class="widget lg:col-span-2">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Top Products Sales Value</h2>
+        <div class="h-64">
+            <canvas id="salesValueBarChart"></canvas>
+        </div>
+    </div>
+
+</main>
     </div>
 </div>
+
+<!-- ================================================================== -->
+<!-- ==================== EXPORT REPORT MODAL ===================== -->
+<!-- ================================================================== -->
+<div id="exportReportModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-[1001]">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+    <h3 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Export Sales Report</h3>
+    <form id="exportReportForm" class="space-y-5">
+      <div>
+        <label for="exportReportType" class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+        <!-- Updated Select Styling -->
+        <select id="exportReportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400">
+          <option value="summary">Sales Summary (Totals)</option>
+          <option value="detailed">Detailed Transactions</option>
+          <option value="category">Sales by Category</option>
+        </select>
+      </div>
+      <!-- Date Range Inputs and Presets -->
+      <div class="space-y-2">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="exportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <!-- Updated Input Styling -->
+            <input type="date" id="exportStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400" required>
+          </div>
+          <div>
+            <label for="exportEndDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <!-- Updated Input Styling -->
+            <input type="date" id="exportEndDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400" required>
+          </div>
+        </div>
+        <div class="flex flex-wrap space-x-2 justify-center pt-2">
+            <!-- Updated Preset Button Styling -->
+            <button type="button" onclick="setExportDateRange('week')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Week</button>
+            <button type="button" onclick="setExportDateRange('lastWeek')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">Last Week</button>
+            <button type="button" onclick="setExportDateRange('month')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Month</button>
+            <button type="button" onclick="setExportDateRange('lastMonth')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">Last Month</button>
+            <button type="button" onclick="setExportDateRange('year')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Year</button>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500">Note: The report will be generated as an Excel (.xlsx) file.</p>
+      <div class="flex justify-end space-x-3 pt-4">
+        <!-- Updated Action Button Styling -->
+        <button type="button" onclick="closeExportModal()" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
+        <button type="submit" id="generateReportBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50">Generate Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Your main script continues below -->
 <!-- ================================================================== -->
 <!-- ==================== END OF DASHBOARD SECTION ==================== -->
 <!-- ================================================================== -->
+
 
 <!-- ================================================================== -->
 <!-- ====================    POS SYSTEM SECTION   == ================== -->
@@ -681,6 +741,18 @@
                             <input type="text" id="item" placeholder="e.g., Custom Jersey Print" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
                         </div>
 
+                        <div>
+                        <label for="transactionCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select id="transactionCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition">
+                          <option value="">Select Category</option>
+                            <option value="1">Jerseys</option>
+                            <option value="2">Shirts</option>
+                            <option value="3">Shorts</option>
+                            <option value="4">Jackets</option>
+                            <option value="5">Others</option>
+                        </select>
+                        </div>
+
                         <div class="flex space-x-4">
                             <div class="flex-1">
                                 <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
@@ -726,6 +798,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Date</th>
                                     <th scope="col" class="px-6 py-3">Item Name</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Category</th> 
                                     <th scope="col" class="px-6 py-3 text-right">Unit Price</th>
                                     <th scope="col" class="px-6 py-3 text-center">Quantity</th>
                                     <th scope="col" class="px-6 py-3 text-center">Order Status</th>
@@ -821,10 +894,9 @@
                     <canvas id="salesTrendChart"></canvas>
                 </div>
             </div>
+
             <!-- Earnings Donut Chart -->
-
             <div class="bg-white p-6 rounded-2xl shadow-md">
-
                 <div>
                     <h2 class="text-xl font-semibold">Earnings Breakdown</h2>
                     <p class="text-sm text-gray-500 mt-1">A breakdown of daily earnings from different sources. This helps identify which channels are most profitable.</p>
@@ -833,25 +905,25 @@
                 <div class="relative mx-auto mt-4" style="max-width: 250px;">
                     <canvas id="earningsChart"></canvas>
                     <div class="absolute inset-0 flex items-center justify-center">
-                         <div class="text-center">
+                        <div class="text-center">
                             <p id="earningsTotal" class="text-3xl font-bold">₱0</p>
                             <p class="text-sm text-gray-500">Today</p>
-                         </div>
+                        </div>
                     </div>
                 </div>
 
                 <div id="earningsLegend" class="mt-6 space-y-2 text-sm text-gray-600">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                             <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-                             <span>Offline</span>
+                            <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                            <span>Offline</span>
                         </div>
                         <span id="offlineEarnings">₱0</span>
                     </div>
-                     <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                             <span class="w-3 h-3 rounded-full bg-orange-400 mr-2"></span>
-                             <span>Online</span>
+                            <span class="w-3 h-3 rounded-full bg-orange-400 mr-2"></span>
+                            <span>Online</span>
                         </div>
                         <span id="onlineEarnings">₱0</span>
                     </div>
@@ -860,10 +932,8 @@
         </div>
 
         <!-- Second Row of Charts -->
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <div class="mt-8">
             <!-- Sales by Category Bar Chart -->
-
             <div class="bg-white p-6 rounded-2xl shadow-md">
                 <h2 class="text-xl font-semibold">Sales by Category</h2>
                 <p class="text-sm text-gray-500 mt-1">This chart displays the sales performance of different product categories, helping you identify top-performing items.</p>
@@ -871,20 +941,10 @@
                     <canvas id="salesByCategoryChart"></canvas>
                 </div>
             </div>
-
-            <!-- Customer Satisfaction Polar Area Chart -->
-
-            <div class="bg-white p-6 rounded-2xl shadow-md">
-                <h2 class="text-xl font-semibold">Customer Satisfaction</h2>
-                 <p class="text-sm text-gray-500 mt-1">This chart illustrates customer satisfaction levels, providing insight into the overall customer experience with your products.</p>
-                <div class="h-80 mt-4 flex justify-center items-center">
-
-                    <canvas id="customerSatisfactionChart" style="max-width: 300px; max-height: 300px;"></canvas>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
 <!-- ================================================================== -->
 <!-- =======================END OF ANALYTICS SECTION ================== -->
 <!-- ================================================================== -->
@@ -1104,52 +1164,54 @@ function initializePOS() {
     const posSearchInput = document.getElementById('pos-product-search');
 
     async function fetchProductsFromBackend() {
-        posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
-        try {
-            // **MODIFIED**: Fetch both Square products and local product stock in parallel
-            const [squareResponse, localResponse] = await Promise.all([
-                fetch('http://127.0.0.1:8000/api/square/products', {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                }),
-                fetch('http://127.0.0.1:8000/api/admin/products', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
-            
-            if (!squareResponse.ok) {
-                const errorData = await squareResponse.json();
-                throw new Error(errorData.error || 'Failed to fetch products from Square.');
-            }
-            const squareData = await squareResponse.json();
-            const localProducts = localResponse.ok ? await localResponse.json() : [];
+    posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
+    try {
+        const [squareResponse, localResponse] = await Promise.all([
+            fetch('http://127.0.0.1:8000/api/square/products', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            }),
+            fetch('http://127.0.0.1:8000/api/admin/products', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+        ]);
+        
+        if (!squareResponse.ok) {
+            const errorData = await squareResponse.json();
+            throw new Error(errorData.error || 'Failed to fetch products from Square.');
+        }
+        const squareData = await squareResponse.json();
+        const localProducts = localResponse.ok ? await localResponse.json() : [];
 
-            // **NEW**: Create a map of local product stock for easy lookup
-            const localProductStock = new Map(localProducts.map(p => [p.name, p.stock]));
+        // ✅ NEW: Create maps for stock and category lookup
+        const localProductStock = new Map(localProducts.map(p => [p.name, p.stock]));
+        const localProductCategory = new Map(localProducts.map(p => [p.name, p.category?.name || 'Uncategorized']));
 
-            if (squareData.error) throw new Error(squareData.error);
+        if (squareData.error) throw new Error(squareData.error);
 
-            if (!squareData.objects || squareData.objects.length === 0) {
-                posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found in Square.</p>`;
-                return;
-            }
+        if (!squareData.objects || squareData.objects.length === 0) {
+            posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No products found in Square.</p>`;
+            return;
+        }
 
-            posAllProducts = squareData.objects.map(item => {
-                const variation = item.item_data.variations[0]; 
-                const priceData = variation.item_variation_data.price_money;
-                return {
-                    id: variation.id, 
-                    name: item.item_data.name,
-                    price: priceData ? Number(priceData.amount) / 100 : 0,
-                    imageUrl: item.image_url || 'https://placehold.co/150x150/E2E8F0/475569?text=No+Image',
-                    stock: localProductStock.get(item.item_data.name) || 0 // **NEW**: Add stock property
-                };
-            });
-            renderPOSProducts();
-        } catch (error) {
-            console.error('Error:', error);
-            posProductGrid.innerHTML = `<p class="col-span-full text-center text-red-500">Error: ${error.message}.</p>`;
-        }
-    }
+        posAllProducts = squareData.objects.map(item => {
+            const variation = item.item_data.variations[0];
+            const priceData = variation.item_variation_data.price_money;
+            return {
+                id: variation.id,
+                name: item.item_data.name,
+                price: priceData ? Number(priceData.amount) / 100 : 0,
+                imageUrl: item.image_url || 'https://placehold.co/150x150/E2E8F0/475569?text=No+Image',
+                stock: localProductStock.get(item.item_data.name) || 0,
+                // ✅ NEW: Include category
+                category: localProductCategory.get(item.item_data.name) || 'Uncategorized'
+            };
+        });
+        renderPOSProducts();
+    } catch (error) {
+        console.error('Error:', error);
+        posProductGrid.innerHTML = `<p class="col-span-full text-center text-red-500">Error: ${error.message}.</p>`;
+    }
+}
 
     function renderPOSProducts(filter = '') {
         posProductGrid.innerHTML = '';
@@ -1906,9 +1968,16 @@ if ('Notification' in window && Notification.permission !== 'granted') {
 
 let selectedTransactionId = null;
 
-// TRANSACTIONS SYSTEM
-  fetchTransactions();
 
+// <!-- ================================================================== -->
+// <!-- ====================    TRANSACTION SCRIPT     =================== -->
+// <!-- ================================================================== -->
+fetchTransactions();
+loadCategoriesForTransactions();
+
+let categoryMap = new Map(); 
+
+// Fetch transactions list
 async function fetchTransactions() {
   const res = await fetch('http://127.0.0.1:8000/api/transactions', {
     headers: { Authorization: `Bearer ${token}` }
@@ -1925,52 +1994,59 @@ async function fetchTransactions() {
 
     const itemNameEscaped = tx.item_name.replace(/'/g, "\\'");
 
+    // ✅ get category name using stored categoryMap
+    const categoryName = categoryMap.get(tx.category_id) || 'N/A';
+
     const row = document.createElement('tr');
     row.className = "bg-white border-b hover:bg-gray-50";
     row.style.border = "none";
 
     row.innerHTML = `
-        <td class="px-6 py-4 text-gray-900 whitespace-nowrap" style="border:none">${date}</td>
-        <td class="px-6 py-4 font-medium text-gray-900" style="border:none">${tx.item_name}</td>
-        <td class="px-6 py-4 text-right" style="border:none">₱${parseFloat(tx.unit_price).toFixed(2)}</td>
-        <td class="px-6 py-4 text-center" style="border:none">${tx.quantity}</td>
-        <td class="px-6 py-4 text-center" style="border:none">
-            <span class="status-pill ${tx.order_status === 'Successful' ? 'status-successful' : 'status-pending'}">${tx.order_status}</span>
-        </td>
-        <td class="px-6 py-4 text-center" style="border:none">
-            <span class="status-pill ${tx.payment_status === 'Done' ? 'status-done' : 'status-pending'}">${tx.payment_status}</span>
-        </td>
-        <td class="px-6 py-4 text-right" style="border:none">
-            <button onclick="openEditModal(${tx.id}, '${itemNameEscaped}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')" class="text-[#ED4A69] hover:text-[#c13b56]"><i class="fas fa-edit fa-fw"></i></button>
-            <button onclick="deleteTransaction(${tx.id})" class="text-red-600 hover:text-red-900 ml-2"><i class="fas fa-trash fa-fw"></i></button>
-        </td>
+      <td class="px-6 py-4 text-gray-900 whitespace-nowrap" style="border:none">${date}</td>
+      <td class="px-6 py-4 font-medium text-gray-900" style="border:none">${tx.item_name}</td>
+      <td class="px-6 py-4 text-center" style="border:none">${categoryName}</td>
+      <td class="px-6 py-4 text-right" style="border:none">₱${parseFloat(tx.unit_price).toFixed(2)}</td>
+      <td class="px-6 py-4 text-center" style="border:none">${tx.quantity}</td>
+      <td class="px-6 py-4 text-center" style="border:none">
+        <span class="status-pill ${tx.order_status === 'Successful' ? 'status-successful' : 'status-pending'}">${tx.order_status}</span>
+      </td>
+      <td class="px-6 py-4 text-center" style="border:none">
+        <span class="status-pill ${tx.payment_status === 'Done' ? 'status-done' : 'status-pending'}">${tx.payment_status}</span>
+      </td>
+      <td class="px-6 py-4 text-right" style="border:none">
+        <button onclick="openEditModal(${tx.id}, '${itemNameEscaped}', ${tx.unit_price}, ${tx.quantity}, '${tx.order_status}', '${tx.payment_status}')" class="text-[#ED4A69] hover:text-[#c13b56]"><i class="fas fa-edit fa-fw"></i></button>
+        <button onclick="deleteTransaction(${tx.id})" class="text-red-600 hover:text-red-900 ml-2"><i class="fas fa-trash fa-fw"></i></button>
+      </td>
     `;
     list.appendChild(row);
   });
 }
 
+// Submit new transaction
 async function submitTransaction() {
   const item = document.getElementById("item").value;
   const price = parseFloat(document.getElementById("price").value);
   const qty = parseInt(document.getElementById("qty").value);
   const orderStatus = document.getElementById("orderStatus").value;
   const paymentStatus = document.getElementById("paymentStatus").value;
+  const categoryId = document.getElementById("transactionCategory").value; // ✅ added category
 
   const responseDiv = document.getElementById("response");
 
   try {
-      const res = await fetch('http://127.0.0.1:8000/api/transactions', {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
+    const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({
         item_name: item,
         unit_price: price,
         quantity: qty,
         order_status: orderStatus,
-        payment_status: paymentStatus
+        payment_status: paymentStatus,
+        category_id: categoryId // ✅ include category
       })
     });
 
@@ -1978,11 +2054,13 @@ async function submitTransaction() {
     responseDiv.innerText = data.message || 'Transaction added!';
     responseDiv.style.color = "green";
 
+    // Reset form
     document.getElementById("item").value = '';
     document.getElementById("price").value = '';
     document.getElementById("qty").value = '';
     document.getElementById("orderStatus").value = 'Pending';
     document.getElementById("paymentStatus").value = 'Pending';
+    document.getElementById("transactionCategory").value = ''; // ✅ reset category
 
     fetchTransactions();
   } catch (err) {
@@ -1992,6 +2070,7 @@ async function submitTransaction() {
   }
 }
 
+// Edit modal logic
 function openEditModal(id, item_name, unit_price, quantity, order_status, payment_status) {
   selectedTransactionId = id;
   document.getElementById('editTransactionId').value = id;
@@ -2011,6 +2090,7 @@ function closeTransactionModal() {
   modal.style.display = 'none';
 }
 
+// Save edits
 async function saveEdit() {
   const id = document.getElementById('editTransactionId').value;
   const item = document.getElementById('editItem').value;
@@ -2021,11 +2101,11 @@ async function saveEdit() {
 
   try {
     await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({
         item_name: item,
         unit_price: price,
@@ -2042,6 +2122,7 @@ async function saveEdit() {
   }
 }
 
+// Delete transaction
 async function deleteTransaction(id) {
   if (!confirm("Are you sure you want to delete this transaction?")) return;
 
@@ -2065,438 +2146,862 @@ async function deleteTransaction(id) {
   }
 }
 
+// Load categories for transaction dropdown
+async function loadCategoriesForTransactions() {
+  const res = await fetch('http://127.0.0.1:8000/api/categories', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const categories = await res.json();
+  const select = document.getElementById('transactionCategory');
+  select.innerHTML = '<option value="">-- Select Category --</option>';
+
+  categories.forEach(c => {
+    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    categoryMap.set(c.id, c.name); // store for later use
+  });
+}
+// <!-- ================================================================== -->
+// <!-- ==================== END OF TRANSACTION SCRIPT =================== -->
+// <!-- ================================================================== -->
+
 // <!-- ================================================================== -->
 // <!-- ==================== DASHBOARD SCRIPT LOGIC ====================== -->
 // <!-- ================================================================== -->
-    let salesDonutChartInstance = null;
-    let salesBarChartInstance = null;
+let salesDonutChartInstance = null;
+let salesBarChartInstance = null;
+let salesValueBarChartInstance = null;
 
-    // --- LIVE CLOCK ---
-    function updateClock() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        document.getElementById('live-clock').textContent = timeString;
+// --- LIVE CLOCK ---
+function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const clockElement = document.getElementById('live-clock');
+    if (clockElement) {
+        clockElement.textContent = timeString;
+    }
+}
+
+// --- MAIN DASHBOARD UPDATE FUNCTION ---
+async function updateDashboard() {
+
+    // ADDED: Check if the token exists. This is a common source of errors.
+    if (typeof token === 'undefined' || !token) {
+        console.error("Authentication token is missing or undefined. Cannot fetch dashboard data.");
+        // This stops the function from running without a token.
+        return;
     }
 
+    try {
+        const [ordersResponse, appointmentsResponse, summaryResponse, topProductsResponse] = await Promise.all([
+            fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('http://127.0.0.1:8000/api/reports/dashboard-summary', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('http://127.0.0.1:8000/api/reports/top-products', { headers: { Authorization: `Bearer ${token}` } })
+        ]);
 
-    // --- MAIN DASHBOARD UPDATE FUNCTION ---
-    async function updateDashboard() {
-        try {
-            // Fetch all necessary data in parallel
-            const [ordersResponse, appointmentsResponse, transactionsResponse] = await Promise.all([
-                fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('http://127.0.0.1:8000/api/transactions', { headers: { Authorization: `Bearer ${token}` } })
-            ]);
+        if (!summaryResponse.ok) {
+            console.error(`Error fetching dashboard summary: ${summaryResponse.status} ${summaryResponse.statusText}`);
+            throw new Error('Failed to fetch dashboard summary');
+        }
+        if (!topProductsResponse.ok) {
+            console.error(`Error fetching top products: ${topProductsResponse.status} ${topProductsResponse.statusText}`);
+            throw new Error('Failed to fetch top products');
+        }
 
-            const orders = await ordersResponse.json();
-            const appointmentsData = await appointmentsResponse.json();
-            const appointments = appointmentsData.data || appointmentsData;
-            const transactions = await transactionsResponse.json();
+        const orders = ordersResponse.ok ? await ordersResponse.json() : [];
+        const appointmentsData = appointmentsResponse.ok ? await appointmentsResponse.json() : { data: [] };
+        const appointments = appointmentsData.data || appointmentsData;
+        const summaryData = await summaryResponse.json();
+        const topProductsData = await topProductsResponse.json();
 
-            // 1. Update Stat Cards
-            updateStatCards(orders, transactions);
-            
-            // 2. Aggregate data for charts from both manual transactions and delivered orders
-            const productSales = {};
+        updateStatCards(orders, summaryData);
 
-            // Process manual transactions
-            transactions.forEach(tx => {
-                // Count successful transactions towards sales volume
-                if (tx.order_status === 'Successful') {
-                    productSales[tx.item_name] = (productSales[tx.item_name] || 0) + parseInt(tx.quantity, 10);
-                }
-            });
+        // MODIFIED: Added a check in case the API wraps the array in a 'data' object
+        const validTopProductsData = topProductsData.data || (Array.isArray(topProductsData) ? topProductsData : []);
 
-            // Process automated orders
-            orders.forEach(order => {
-                // Only count orders that have been successfully delivered
-                if (order.tracking_stage === 'Delivered') {
-                    order.items.forEach(item => {
-                        if (item.product && item.product.name) {
-                            productSales[item.product.name] = (productSales[item.product.name] || 0) + parseInt(item.quantity, 10);
-                        }
-                    });
-                }
-            });
+        // **IMPORTANT**: Your API for 'top-products' MUST return 'total_revenue'.
+        // If it's named 'total_sales' or something else, you must change it here.
+        const combinedTopSales = validTopProductsData.map(product => ({
+            item_name: product.product_name,
+            total_quantity: product.total_quantity,
+            total_revenue: product.total_revenue // This assumes your API provides this field
+        }));
 
-            // Format the aggregated data into the structure expected by the chart function
-            const combinedTopSales = Object.keys(productSales).map(name => ({
-                item_name: name,
-                total_quantity: productSales[name]
-            })).sort((a, b) => b.total_quantity - a.total_quantity); // Sort descending by quantity
-            
-            // 3. Update Charts with the newly combined data
-            updateSalesCharts(combinedTopSales);
-            
-            // 4. Update Activity Feed
-            updateActivityFeed(orders, appointments);
+        updateSalesCharts(combinedTopSales);
+        updateActivityFeed(orders, appointments);
 
-        } catch (error) {
-            console.error("Failed to update dashboard:", error);
-        }
-    }
+    } catch (error) {
+        console.error("Failed to update dashboard:", error);
+        const totalRevenueEl = document.getElementById('total-revenue');
+        if (totalRevenueEl) totalRevenueEl.textContent = '₱Error';
+        const totalSalesEl = document.getElementById('total-sales');
+        if (totalSalesEl) totalSalesEl.textContent = 'Error';
+        const pendingOrdersEl = document.getElementById('pending-orders');
+        if (pendingOrdersEl) pendingOrdersEl.textContent = 'Error';
+        const legendContainer = document.getElementById('sales-legend');
+        if (legendContainer) legendContainer.innerHTML = '<p class="text-slate-500 text-center text-red-500">Error loading chart data.</p>';
+        const feed = document.getElementById('activity-feed');
+        if (feed) feed.innerHTML = '<li class="flex items-center justify-center text-red-500 py-10">Error loading activities.</li>';
+    }
+}
 
-    function updateStatCards(orders, transactions) {
-        const now = new Date();
-        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+// --- UPDATE STAT CARDS ---
+function updateStatCards(orders, summaryData) {
+    if (typeof summaryData !== 'object' || summaryData === null) {
+        console.error("Invalid summary data received:", summaryData);
+    }
 
-        let currentMonthRevenue = 0;
-        let previousMonthRevenue = 0;
-        let currentMonthSalesCount = 0;
-        let previousMonthSalesCount = 0;
-        let pendingOrders = 0;
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-        // Process automated orders
+    let currentMonthRevenue = summaryData?.current_month?.total_revenue ?? 0;
+    let previousMonthRevenue = summaryData?.previous_month?.total_revenue ?? 0;
+    let currentMonthSalesCount = summaryData?.current_month?.total_sales_count ?? 0;
+    let previousMonthSalesCount = summaryData?.previous_month?.total_sales_count ?? 0;
+
+    let pendingOrders = 0;
+    if (Array.isArray(orders)) {
         orders.forEach(order => {
-            const orderDate = new Date(order.created_at);
-            if (order.tracking_stage === 'Delivered') {
-                if (orderDate >= startOfCurrentMonth) {
-                    currentMonthRevenue += parseFloat(order.total);
-                    currentMonthSalesCount++;
-                } else if (orderDate >= startOfPreviousMonth && orderDate <= endOfPreviousMonth) {
-                    previousMonthRevenue += parseFloat(order.total);
-                    previousMonthSalesCount++;
-                }
-            } else {
+            if (order.tracking_stage !== 'Delivered') {
                 pendingOrders++;
             }
         });
+    }
 
-        // Process manual transactions
-        transactions.forEach(tx => {
-            if (tx.order_status === 'Successful' && tx.payment_status === 'Done') {
-                const txDate = new Date(tx.created_at);
-                const txTotal = parseFloat(tx.unit_price) * parseInt(tx.quantity);
-                if (txDate >= startOfCurrentMonth) {
-                    currentMonthRevenue += txTotal;
-                    currentMonthSalesCount++;
-                } else if (txDate >= startOfPreviousMonth && txDate <= endOfPreviousMonth) {
-                    previousMonthRevenue += txTotal;
-                    previousMonthSalesCount++;
-                }
-            }
-        });
+    const getComparisonText = (current, previous, element, isRevenue = false) => {
+        if (!element) return;
+        const parentDiv = element.nextElementSibling;
+        if (!parentDiv || typeof parentDiv.querySelector !== 'function') return;
 
-        // Function to calculate percentage change and format text
-        const getComparisonText = (current, previous, element, isRevenue = false) => {
-            const parentDiv = element.nextElementSibling;
-            if (previous === 0) {
-                if (current > 0) {
-                     parentDiv.querySelector('span').textContent = 'Up from last month';
-                     parentDiv.querySelector('svg').style.transform = 'rotate(0deg)';
-                     parentDiv.querySelector('svg').style.color = '#10B981'; // green
-                } else {
-                     parentDiv.querySelector('span').textContent = 'No change from last month';
-                      parentDiv.querySelector('svg').style.transform = 'rotate(90deg)';
-                     parentDiv.querySelector('svg').style.color = '#64748B'; // gray
-                }
-                return;
-            }
+        const spanElement = parentDiv.querySelector('span');
+        const svgElement = parentDiv.querySelector('svg');
 
-            const percentageChange = ((current - previous) / previous) * 100;
-            if (percentageChange > 0) {
-                parentDiv.querySelector('span').textContent = `+${percentageChange.toFixed(0)}% from last month`;
-                parentDiv.querySelector('svg').style.transform = 'rotate(0deg)';
-                parentDiv.querySelector('svg').style.color = '#10B981'; // green
-            } else if (percentageChange < 0) {
-                parentDiv.querySelector('span').textContent = `${percentageChange.toFixed(0)}% from last month`;
-                parentDiv.querySelector('svg').style.transform = 'rotate(180deg)';
-                parentDiv.querySelector('svg').style.color = '#EF4444'; // red
+        if (!spanElement || !svgElement) return;
+
+        if (previous === 0) {
+            if (current > 0) {
+                spanElement.textContent = 'Up from last month';
+                svgElement.style.transform = 'rotate(0deg)';
+                svgElement.style.color = '#10B981';
             } else {
-                parentDiv.querySelector('span').textContent = 'No change from last month';
-                parentDiv.querySelector('svg').style.transform = 'rotate(90deg)';
-                parentDiv.querySelector('svg').style.color = '#64748B'; // gray
+                spanElement.textContent = 'No change from last month';
+                svgElement.style.transform = 'rotate(90deg)';
+                svgElement.style.color = '#64748B';
             }
-        };
-        
-        const totalRevenueEl = document.getElementById('total-revenue');
-        totalRevenueEl.textContent = `₱${currentMonthRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        getComparisonText(currentMonthRevenue, previousMonthRevenue, totalRevenueEl, true);
+            return;
+        }
 
-        const totalSalesEl = document.getElementById('total-sales');
+        const percentageChange = ((current - previous) / previous) * 100;
+        if (percentageChange > 0) {
+            spanElement.textContent = `+${percentageChange.toFixed(0)}% from last month`;
+            svgElement.style.transform = 'rotate(0deg)';
+            svgElement.style.color = '#10B981';
+        } else if (percentageChange < 0) {
+            spanElement.textContent = `${percentageChange.toFixed(0)}% from last month`;
+            svgElement.style.transform = 'rotate(180deg)';
+            svgElement.style.color = '#EF4444';
+        } else {
+            spanElement.textContent = 'No change from last month';
+            svgElement.style.transform = 'rotate(90deg)';
+            svgElement.style.color = '#64748B';
+        }
+    };
+
+    const totalRevenueEl = document.getElementById('total-revenue');
+    if (totalRevenueEl) {
+        totalRevenueEl.textContent = `₱${Number(currentMonthRevenue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        getComparisonText(Number(currentMonthRevenue), Number(previousMonthRevenue), totalRevenueEl, true);
+    }
+
+    const totalSalesEl = document.getElementById('total-sales');
+    if (totalSalesEl) {
         totalSalesEl.textContent = currentMonthSalesCount;
         getComparisonText(currentMonthSalesCount, previousMonthSalesCount, totalSalesEl);
-
-        document.getElementById('pending-orders').textContent = pendingOrders;
     }
-    
-    // --- CHART UPDATE FUNCTION ---
-    function updateSalesCharts(topSales) {
-        const salesLabels = topSales.map(item => item.item_name);
-        const salesValues = topSales.map(item => item.total_quantity);
-        const totalItemsSold = salesValues.reduce((sum, value) => sum + parseInt(value, 10), 0);
-        
-        const themeColors = {
-            primary: '#EF534F', secondary: '#FB7E96', accent: '#FFCDD2',
-            dark: '#4C4141', neutral: '#64748b', grid: '#e2e8f0'
-        };
-        const donutColors = [themeColors.primary, themeColors.secondary, themeColors.accent, themeColors.dark, '#FB923C', '#A78BFA', '#60A5FA'];
 
-        // Update total in donut center
-        document.getElementById('total-sales-value').textContent = totalItemsSold;
+    const pendingOrdersEl = document.getElementById('pending-orders');
+    if (pendingOrdersEl) {
+        pendingOrdersEl.textContent = pendingOrders;
+    }
+}
 
-        // Update Legend
-        const legendContainer = document.getElementById('sales-legend');
+// --- CHART UPDATE FUNCTION ---
+function updateSalesCharts(topSales) {
+    const salesLabels = topSales.map(item => item.item_name);
+    const salesValues = topSales.map(item => item.total_quantity); // For volume
+
+    // **IMPORTANT**: This relies on 'total_revenue' from the 'combinedTopSales' map.
+    const salesRevenueValues = topSales.map(item => item.total_revenue); // For sales value
+
+    const totalItemsSold = salesValues.reduce((sum, value) => sum + parseInt(value || 0, 10), 0);
+
+    const themeColors = {
+        primary: '#EF534F', secondary: '#FB7E96', accent: '#FFCDD2',
+        dark: '#4C4141', neutral: '#64748b', grid: '#e2e8f0'
+    };
+    const donutColors = [themeColors.primary, themeColors.secondary, themeColors.accent, themeColors.dark, '#FB923C', '#A78BFA', '#60A5FA'];
+
+    // ADDED: Consistent animation options for all charts
+    const chartAnimation = {
+        duration: 800,
+        easing: 'easeInOutQuart'
+    };
+
+    // ADDED: Reusable hover function for cursor
+    const onChartHover = (event, chartElement) => {
+        const canvas = event.native.target;
+        canvas.style.cursor = chartElement[0] ? 'pointer' : 'default';
+    };
+
+    const totalSalesValueEl = document.getElementById('total-sales-value');
+    if (totalSalesValueEl) totalSalesValueEl.textContent = totalItemsSold;
+
+    // Legend (remains based on volume/quantity)
+    const legendContainer = document.getElementById('sales-legend');
+    if (legendContainer) {
         legendContainer.innerHTML = '';
-        if (topSales.length > 0) {
+        if (topSales.length > 0 && totalItemsSold > 0) { // Added check for totalItemsSold
             topSales.forEach((item, index) => {
-                const percentage = totalItemsSold > 0 ? ((item.total_quantity / totalItemsSold) * 100).toFixed(0) : 0;
+                const quantity = parseInt(item.total_quantity || 0, 10);
+                const percentage = totalItemsSold > 0 ? ((quantity / totalItemsSold) * 100).toFixed(0) : 0;
                 const legendItem = `
-                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                        <div class="flex items-center" style="min-width: 0;">
-                            <span class="w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0" style="background-color: ${donutColors[index % donutColors.length]}"></span>
-                            <span class="font-medium text-slate-600 text-sm truncate">${item.item_name}</span>
-                        </div>
-                        <span class="font-semibold text-slate-800 text-sm ml-2">${percentage}%</span>
-                    </div>
-                `;
+                        <div class="flex items-center justify-between px-3 py-1 rounded-lg hover:bg-slate-50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${donutColors[index % donutColors.length]}"></span>
+                                <span class="font-medium text-slate-600 text-sm truncate">${item.item_name || 'Unknown'}</span>
+                            </div>
+                            <span class="font-semibold text-slate-800 text-sm">${percentage}%</span>
+                        </div>`;
                 legendContainer.innerHTML += legendItem;
             });
         } else {
             legendContainer.innerHTML = '<p class="text-slate-500 text-center">No sales data available.</p>';
         }
+    }
 
-
-        // Donut Chart
-        const donutCanvas = document.getElementById('salesDonutChart');
-        if (donutCanvas) {
-            // REMOVED fixed sizing. The chart will now rely on its container's CSS.
-            // If the chart does not display or is too small, ensure the parent 
-            // container (where salesDonutChart is located) has fluid width/height 
-            // utility classes (e.g., 'w-full h-80').
-            // donutCanvas.parentElement.style.height = '330px';
-            // donutCanvas.parentElement.style.width = '330px';
-        }
-
-        const donutCtx = donutCanvas?.getContext('2d');
-        if (salesDonutChartInstance) { salesDonutChartInstance.destroy(); }
-        if (donutCtx) {
+    // Donut Chart (remains based on volume/quantity)
+    const donutCanvas = document.getElementById('salesDonutChart');
+    const donutCtx = donutCanvas?.getContext('2d');
+    if (donutCtx) {
+        if (salesDonutChartInstance) {
+            // IMPROVED: Update existing chart for smooth animation (no flicker)
+            salesDonutChartInstance.data.labels = salesLabels;
+            salesDonutChartInstance.data.datasets[0].data = salesValues;
+            salesDonutChartInstance.update();
+        } else {
+            // Create new chart if it doesn't exist
             salesDonutChartInstance = new Chart(donutCtx, {
                 type: 'doughnut',
                 data: {
                     labels: salesLabels,
-                    datasets: [{ 
+                    datasets: [{
                         data: salesValues,
                         backgroundColor: donutColors,
                         borderColor: '#fff',
                         borderWidth: 4,
-                        hoverOffset: 15,
-                        hoverBorderColor: '#fff'
+                        hoverOffset: 12, // ADDED: Makes slice pop out
+                        hoverBorderWidth: 6, // ADDED: Cleans up border on hover
+                        hoverBorderColor: '#fff' // ADDED: Cleans up border on hover
+                    }]
+                },
+                options: {
+                    cutout: '80%',
+                    plugins: { legend: { display: false } },
+                    animation: chartAnimation, // Animation enabled
+                    onHover: onChartHover // ADDED: Cursor pointer
+                }
+            });
+        }
+    }
+
+    // Bar Chart (Volume)
+    const barCtx = document.getElementById('salesBarChart')?.getContext('2d');
+    if (barCtx) {
+        if (salesBarChartInstance) {
+            // IMPROVED: Update existing chart
+            salesBarChartInstance.data.labels = salesLabels;
+            salesBarChartInstance.data.datasets[0].data = salesValues;
+            salesBarChartInstance.update();
+        } else {
+            // Create new chart
+            salesBarChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: salesLabels,
+                    datasets: [{
+                        data: salesValues,
+                        backgroundColor: themeColors.primary,
+                        borderRadius: 6,
+                        barThickness: 20,
+                        hoverBackgroundColor: themeColors.dark, // ADDED: Bar color change
+                        hoverBorderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '80%', // keeps the visual style of a thin ring
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+                    animation: chartAnimation, // Animation enabled
+                    onHover: onChartHover // ADDED: Cursor pointer
+                }
+            });
+        }
+    }
+
+    // ADDED: Bar Chart (Sales Value / Revenue)
+    const valueBarCtx = document.getElementById('salesValueBarChart')?.getContext('2d'); // Assumes new canvas ID
+    if (valueBarCtx) {
+        if (salesValueBarChartInstance) {
+            // IMPROVED: Update existing chart
+            salesValueBarChartInstance.data.labels = salesLabels;
+            salesValueBarChartInstance.data.datasets[0].data = salesRevenueValues;
+            salesValueBarChartInstance.update();
+        } else {
+            // Create new chart
+            salesValueBarChartInstance = new Chart(valueBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: salesLabels,
+                    datasets: [{
+                        data: salesRevenueValues, // Use new sales revenue data
+                        backgroundColor: themeColors.secondary, // Use a different color
+                        borderRadius: 6,
+                        barThickness: 20,
+                        hoverBackgroundColor: themeColors.dark, // ADDED: Bar color change
+                        hoverBorderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
                     plugins: {
                         legend: { display: false },
-                        datalabels: { display: false }
-                    },
-                    animation: {
-                        duration: donutCtx.canvas._hasAnimated ? 0 : 1000,
-                        easing: 'easeOutQuart',
-                        onComplete: () => {
-                            donutCtx.canvas._hasAnimated = true;
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', {
+                                            style: 'currency',
+                                            currency: 'PHP' // Set to Philippine Peso
+                                        }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
                         }
-                    }
-                },
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return '₱' + Number(value).toLocaleString('en-US');
+                                }
+                            }
+                        }
+                    },
+                    animation: chartAnimation, // Animation enabled
+                    onHover: onChartHover // ADDED: Cursor pointer
+                }
             });
         }
-
-          // Bar Chart
-          const barCtx = document.getElementById('salesBarChart')?.getContext('2d');
-          if (salesBarChartInstance) { salesBarChartInstance.destroy(); }
-          if (barCtx) {
-              salesBarChartInstance = new Chart(barCtx, {
-                  type: 'bar',
-                  data: {
-                      labels: salesLabels,
-                      datasets: [{
-                          label: 'Sales',
-                          data: salesValues,
-                          backgroundColor: themeColors.primary,
-                          borderRadius: 8,
-                          barThickness: 20
-                      }]
-                  },
-                  options: {
-                      responsive: true, maintainAspectRatio: false,
-                      plugins: { legend: { display: false } },
-                      scales: {
-                          x: { grid: { display: false }, ticks: { color: themeColors.neutral } },
-                          y: { beginAtZero: true, grid: { color: themeColors.grid, drawBorder: false }, ticks: { color: themeColors.neutral, stepSize: 1 } }
-                      },
-                      animation: {
-                          // Check if the canvas has our custom property
-                          duration: barCtx.canvas._hasAnimated ? 0 : 1000,
-                          onComplete: () => {
-                              // Set the custom property to true after the first animation
-                              barCtx.canvas._hasAnimated = true;
-                          }
-                      }
-                  }
-              });
-          }
     }
-    
-    // --- ACTIVITY FEED UPDATE FUNCTION ---
-    function updateActivityFeed(orders, appointments) {
-        const feed = document.getElementById('activity-feed');
-        feed.innerHTML = '';
+}
 
-        const recentOrders = (orders || []).slice(-5).map(o => ({
-            type: 'order',
-            date: new Date(o.updated_at),
-            data: o
-        }));
-        
-        const recentAppointments = (appointments || []).slice(-5).map(a => ({
-            type: 'appointment',
-            date: new Date(a.updated_at),
-            data: a
-        }));
-        
-        const activities = [...recentOrders, ...recentAppointments]
-            .sort((a, b) => b.date - a.date) // Sort most recent first
-            .slice(0, 5); // Take the top 5 overall recent activities
 
-        if (activities.length === 0) {
-            feed.innerHTML = '<li class="flex items-center justify-center text-slate-500 py-10">No recent activities.</li>';
-            return;
-        }
+// --- FIXED ACTIVITY FEED UI ---
+// MODIFIED: Removed the fade-in/out animation for an instant update.
+function updateActivityFeed(orders, appointments) {
+    const feed = document.getElementById('activity-feed');
+    if (!feed) return;
 
-        activities.forEach(activity => {
-            const li = document.createElement('li');
-            li.className = 'flex items-center space-x-4 py-3';
-            let iconHtml = '';
-            let textHtml = '';
-            
-            const timeAgo = (date) => {
-                const seconds = Math.floor((new Date() - date) / 1000);
-                if (seconds < 5) return "just now";
-                let interval = seconds / 31536000;
-                if (interval > 1) return Math.floor(interval) + " years ago";
-                interval = seconds / 2592000;
-                if (interval > 1) return Math.floor(interval) + " months ago";
-                interval = seconds / 86400;
-                if (interval > 1) return Math.floor(interval) + " days ago";
-                interval = seconds / 3600;
-                if (interval > 1) return Math.floor(interval) + " hours ago";
-                interval = seconds / 60;
-                if (interval > 1) return Math.floor(interval) + " minutes ago";
-                return Math.floor(seconds) + " seconds ago";
-            }
+    feed.innerHTML = ''; // Clear content
 
-            if (activity.type === 'order') {
-                iconHtml = `
-                    <div class="flex items-center justify-center h-10 w-10 rounded-full bg-green-100 text-green-600">
-                        <i data-feather="package"></i>
-                    </div>`;
-                let statusText = `New order #${activity.data.order_id} was placed.`;
-                if(activity.data.created_at !== activity.data.updated_at) {
-                    statusText = `Order #${activity.data.order_id} status updated to ${activity.data.tracking_stage || activity.data.status}.`
-                }
-                textHtml = `
-                    <div>
-                        <p class="text-sm font-medium text-slate-700">${statusText}</p>
-                        <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
-                    </div>`;
-            } else if (activity.type === 'appointment') {
-                 iconHtml = `
-                    <div class="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100 text-purple-600">
-                         <i data-feather="calendar"></i>
-                    </div>`;
-                let statusText = `New appointment from ${activity.data.full_name}.`;
-                 if(activity.data.created_at !== activity.data.updated_at) {
-                    statusText = `Appointment for ${activity.data.full_name} was ${activity.data.status}.`
-                }
-                textHtml = `
-                    <div>
-                        <p class="text-sm font-medium text-slate-700">${statusText}</p>
-                        <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
-                    </div>`;
-            }
-            li.innerHTML = iconHtml + textHtml;
-            feed.appendChild(li);
-        });
-        feather.replace();
+    const recentOrders = (Array.isArray(orders) ? orders : []).slice(-5).map(o => ({
+        type: 'order', date: new Date(o.updated_at), data: o
+    }));
+
+    const recentAppointments = (Array.isArray(appointments) ? appointments : []).slice(-5).map(a => ({
+        type: 'appointment', date: new Date(a.updated_at), data: a
+    }));
+
+    const activities = [...recentOrders, ...recentAppointments].sort((a, b) => b.date - a.date).slice(0, 5);
+
+    if (activities.length === 0) {
+        feed.innerHTML = '<li class="flex items-center justify-center text-slate-500 py-6">No recent activities.</li>';
+        return; // Return early
     }
 
-    // --- MINI CALENDAR WIDGET ---
-    function initializeCalendar() {
-        const calendarHeader = document.getElementById('calendar-month-year');
-        const calendarGrid = document.getElementById('calendar-grid');
-        const prevMonthBtn = document.getElementById('prev-month');
-        const nextMonthBtn = document.getElementById('next-month');
-        let currentDate = new Date(); 
+    activities.forEach(activity => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-slate-50 transition';
 
-        const renderCalendar = () => {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            if(!calendarHeader) return;
-            calendarHeader.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
-            calendarGrid.innerHTML = '';
-            
-            const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-            daysOfWeek.forEach(day => {
-                const dayEl = document.createElement('div');
-                dayEl.className = 'font-semibold text-slate-500';
-                dayEl.textContent = day;
-                calendarGrid.appendChild(dayEl);
-            });
-
-            const firstDayOfMonth = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            for (let i = 0; i < firstDayOfMonth; i++) {
-                calendarGrid.appendChild(document.createElement('div'));
-            }
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dayEl = document.createElement('div');
-                dayEl.textContent = i;
-                dayEl.className = 'p-1 cursor-pointer rounded-full hover:bg-slate-100 flex items-center justify-center h-6 w-6';
-                const today = new Date();
-                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    dayEl.style.backgroundColor = '#EF534F';
-                    dayEl.className += ` text-white font-bold`;
-                }
-                calendarGrid.appendChild(dayEl);
-            }
+        const timeAgo = (date) => {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 5) return "just now";
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return Math.floor(seconds) + " seconds ago";
         };
-        
-        prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-        nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
-        renderCalendar();
-    }
-    
-    // --- INITIALIZE DASHBOARD & SET INTERVALS ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Initial call
-        if(document.getElementById('home').classList.contains('hidden') === false) {
-             updateDashboard();
-        }
-        initializeCalendar();
-        updateClock();
 
-        // Set intervals to auto-refresh
-        setInterval(updateDashboard, 5000); // Refresh dashboard data every 5 seconds
-        setInterval(updateClock, 1000); // Update clock every second
+        let iconHtml = '';
+        let textHtml = '';
+
+        if (activity.type === 'order') {
+            iconHtml = `
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-600">
+                            <i data-feather="package" class="w-4 h-4"></i>
+                        </div>`;
+            let statusText = `New order #${activity.data.order_id} was placed.`;
+            if (activity.data.created_at !== activity.data.updated_at) {
+                statusText = `Order #${activity.data.order_id} status updated to ${activity.data.tracking_stage || activity.data.status}.`;
+            }
+            textHtml = `
+                        <div>
+                            <p class="text-sm font-medium text-slate-700">${statusText}</p>
+                            <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
+                        </div>`;
+        } else if (activity.type === 'appointment') {
+            iconHtml = `
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 text-purple-600">
+                            <i data-feather="calendar" class="w-4 h-4"></i>
+                        </div>`;
+            let statusText = `New appointment from ${activity.data.full_name}.`;
+            if (activity.data.created_at !== activity.data.updated_at) {
+                statusText = `Appointment for ${activity.data.full_name} was ${activity.data.status}.`;
+            }
+            textHtml = `
+                        <div>
+                            <p class="text-sm font-medium text-slate-700">${statusText}</p>
+                            <p class="text-xs text-slate-500">${timeAgo(activity.date)}</p>
+                        </div>`;
+        }
+
+        li.innerHTML = iconHtml + textHtml;
+        feed.appendChild(li);
     });
 
+    feather.replace(); // Re-initialize feather icons
+}
+
+// --- MINI CALENDAR WIDGET ---
+function initializeCalendar() {
+    const calendarHeader = document.getElementById('calendar-month-year');
+    const calendarGrid = document.getElementById('calendar-grid');
+    const prevMonthBtn = document.getElementById('prev-month');
+    const nextMonthBtn = document.getElementById('next-month');
+    let currentDate = new Date();
+
+    const renderCalendar = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        if (!calendarHeader || !calendarGrid) return;
+        calendarHeader.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+        calendarGrid.innerHTML = '';
+
+        const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        daysOfWeek.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'font-semibold text-slate-500';
+            dayEl.textContent = day;
+            calendarGrid.appendChild(dayEl);
+        })
+
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            calendarGrid.appendChild(document.createElement('div'));
+        }
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayEl = document.createElement('div');
+            dayEl.textContent = i;
+            dayEl.className = 'p-1 cursor-pointer rounded-full hover:bg-slate-100 flex items-center justify-center h-6 w-6';
+            const today = new Date();
+            if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayEl.style.backgroundColor = '#EF534F';
+                dayEl.className += ` text-white font-bold`;
+            }
+            calendarGrid.appendChild(dayEl);
+        }
+    }
+
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+    }
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+    }
+    renderCalendar();
+}
+// // // // Add listeners for the new modal
+document.addEventListener('DOMContentLoaded', () => {
+    const exportBtn = document.getElementById('exportReportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', openExportModal);
+    }
+    
+    const exportForm = document.getElementById('exportReportForm');
+    if (exportForm) {
+        exportForm.addEventListener('submit', handleReportGeneration);
+    }
+});
+
+function openExportModal() {
+    const modal = document.getElementById('exportReportModal');
+    
+    // Set default dates to the current month
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    
+    document.getElementById('exportStartDate').value = firstDayOfMonth;
+    document.getElementById('exportEndDate').value = todayStr;
+    
+    modal.classList.remove('hidden');
+}
+
+function closeExportModal() {
+    const modal = document.getElementById('exportReportModal');
+    modal.classList.add('hidden');
+}
+
+// --- INITIALIZE DASHBOARD ---
+document.addEventListener('DOMContentLoaded', () => {
+    const homeElement = document.getElementById('home');
+    if (homeElement && !homeElement.classList.contains('hidden')) {
+        updateDashboard();
+    }
+    initializeCalendar();
+    updateClock();
+    // REMOVED: setInterval(updateDashboard, 5000);
+    setInterval(updateClock, 1000);
+});
 // <!-- ================================================================== -->
 // <!-- ==================== END OF DASHBOARD SCRIPT ===================== -->
+// <!-- ================================================================== -->
+
+
+// <!-- ================================================================== -->
+// <!-- ====================      EXPORT REPORT      ===================== -->
+// <!-- ================================================================== -->
+function setExportDateRange(period) {
+    const today = new Date();
+    const startDateInput = document.getElementById('exportStartDate');
+    const endDateInput = document.getElementById('exportEndDate');
+
+    // Check if elements exist before proceeding
+    if (!startDateInput || !endDateInput) {
+        console.error("Date input elements not found in setExportDateRange.");
+        return;
+    }
+
+    // Adjust for timezone offset to get local date string correctly
+    const tzoffset = today.getTimezoneOffset() * 60000; // offset in milliseconds
+    const localISOTime = (date) => {
+        if (!date || isNaN(date.getTime())) return ''; // Handle invalid dates
+        return new Date(date.getTime() - tzoffset).toISOString().split('T')[0];
+    }
+
+    let startDate, endDate;
+    endDate = new Date(); // Use a new date object for end date manipulation
+
+    try {
+        switch (period) {
+            case 'week': // This Week (Mon-Today)
+                const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday...
+                startDate = new Date(today);
+                // Adjust to start of week (Monday)
+                startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+                endDate = today; // Keep end date as today
+                break;
+            case 'lastWeek': // Previous Week (Mon-Sun)
+                 startDate = new Date(today);
+                 // Go back to previous Monday
+                 startDate.setDate(today.getDate() - today.getDay() - 6);
+                 endDate = new Date(startDate);
+                 // Go forward to Sunday
+                 endDate.setDate(startDate.getDate() + 6);
+                break;
+            case 'month': // This Month (1st - Today)
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                endDate = today; // Keep end date as today
+                break;
+            case 'lastMonth': // Previous Full Month
+                 startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                 endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
+                 break;
+            case 'year': // This Year (Jan 1st - Today)
+                startDate = new Date(today.getFullYear(), 0, 1);
+                endDate = today; // Keep end date as today
+                break;
+            default: // Default to This Month
+                 startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                 endDate = today;
+                 break;
+        }
+
+        startDateInput.value = localISOTime(startDate);
+        endDateInput.value = localISOTime(endDate);
+
+        // Also update the max attribute for the end date when setting presets
+        endDateInput.max = localISOTime(new Date());
+
+    } catch (error) {
+        console.error("Error setting date range:", error);
+        // Fallback to setting default dates if calculation fails
+        startDateInput.value = localISOTime(new Date(today.getFullYear(), today.getMonth(), 1));
+        endDateInput.value = localISOTime(today);
+        endDateInput.max = localISOTime(new Date());
+    }
+}
+
+
+// Define Export Functions first
+function openExportModal() {
+    const modal = document.getElementById('exportReportModal');
+    // Check if modal exists
+    if (!modal) {
+        console.error("Export modal element (#exportReportModal) not found!");
+        showToast("Error: Export dialog could not be opened.", "error");
+        return;
+    }
+
+    const startDateInput = document.getElementById('exportStartDate');
+    const endDateInput = document.getElementById('exportEndDate');
+
+    // Check if date inputs exist WITHIN the modal
+    if (!startDateInput || !endDateInput) {
+        console.error("Date input elements (#exportStartDate or #exportEndDate) not found inside the modal!");
+        showToast("Error: Date inputs missing in the export dialog.", "error");
+        return; // Stop if inputs are missing
+    }
+
+    // Set default dates to the current month using the helper function
+    setExportDateRange('month'); // This now includes setting the max attribute
+
+    // --- Restrict End Date ---
+    // Adjust for timezone offset to get local date string correctly for max attribute
+    const today = new Date();
+    const tzoffset = today.getTimezoneOffset() * 60000;
+    const todayMax = new Date(today.getTime() - tzoffset).toISOString().split('T')[0];
+    endDateInput.max = todayMax;
+    // --- End Restriction ---
+
+
+    // Make modal visible by removing 'hidden' and setting display style
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex'; // Explicitly set display
+}
+
+function closeExportModal() {
+    const modal = document.getElementById('exportReportModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none'; // Explicitly hide
+    }
+}
+
+async function handleReportGeneration(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const generateBtn = document.getElementById('generateReportBtn');
+    // Double check elements exist before accessing values
+    const reportTypeSelect = document.getElementById('exportReportType');
+    const startDateInput = document.getElementById('exportStartDate');
+    const endDateInput = document.getElementById('exportEndDate');
+
+    if (!generateBtn || !reportTypeSelect || !startDateInput || !endDateInput) {
+         console.error("Form elements missing in export modal.");
+         showToast("Error: Cannot generate report due to missing form elements.", "error");
+         return;
+    }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+
+    const reportType = reportTypeSelect.value;
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+
+    // Validate dates
+    if (!startDate || !endDate) {
+        showToast("Please select both start and end dates.", "error");
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Report';
+        return;
+    }
+    // Prevent future dates (double check)
+    const today = new Date();
+    const tzoffset = today.getTimezoneOffset() * 60000;
+    const todayMax = new Date(today.getTime() - tzoffset).toISOString().split('T')[0];
+    if (endDate > todayMax) {
+         showToast("End date cannot be in the future.", "error");
+         endDateInput.value = todayMax; // Reset to today
+         generateBtn.disabled = false;
+         generateBtn.textContent = 'Generate Report';
+         return;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+        showToast("Start date cannot be after end date.", "error");
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Report';
+        return;
+    }
+
+
+    try {
+        const apiUrl = `http://127.0.0.1:8000/api/reports/export-sales?type=${reportType}&start_date=${startDate}&end_date=${endDate}`;
+
+        // Ensure token is defined and accessible (assuming it's globally available as 'token')
+        if (typeof token === 'undefined' || !token) {
+             throw new Error("Authentication token is missing.");
+        }
+
+        const response = await fetch(apiUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            let errorMsg = `Failed to fetch report data (Status: ${response.status})`;
+            try {
+                const err = await response.json();
+                errorMsg = err.message || errorMsg; // Use server message if available
+            } catch (e) { /* Ignore JSON parse error, use status code message */ }
+            throw new Error(errorMsg);
+        }
+
+        const data = await response.json();
+
+        // Check if data is specifically an empty array (valid response but no results)
+        if (Array.isArray(data) && data.length === 0) {
+             showToast('No data found for the selected criteria.', 'info'); // Use 'info' type
+             // Do not close modal - let user change dates
+        } else if (!data || (Array.isArray(data) && data.length === 0 && !data[0])) { // Improved check for invalid/empty data
+             showToast('Received invalid or empty data from server.', 'error');
+        }
+         else {
+            // --- Generate Excel file with better formatting ---
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            // Calculate column widths
+            const colWidths = [];
+             // Check if data[0] exists before trying to get keys
+             if (data[0]) {
+                 const header = Object.keys(data[0]); // Get header names from the first data row
+                 header.forEach((h, index) => {
+                     let maxLen = h.length; // Start with header length
+                     data.forEach(row => {
+                         const cellValue = row[h];
+                         // Ensure cellValue is treated as a string for length check, handle null/undefined
+                         const cellLen = cellValue !== null && cellValue !== undefined ? String(cellValue).length : 0;
+                         if (cellLen > maxLen) {
+                             maxLen = cellLen;
+                         }
+                     });
+                     colWidths[index] = { wch: maxLen + 2 }; // Add a little padding
+                 });
+                 ws['!cols'] = colWidths; // Apply widths to worksheet
+             } else {
+                 console.warn("Cannot calculate column widths: No data rows returned.");
+             }
+
+
+            // Add AutoFilter to the header row only if there's data and a range
+             if (ws['!ref']) { // Check if worksheet has a range defined
+                ws['!autofilter'] = { ref: XLSX.utils.encode_range(XLSX.utils.decode_range(ws['!ref'])) };
+             }
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+
+            const fileName = `EasePrint_Sales_${reportType}_${startDate}_to_${endDate}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            showToast('Report generated successfully!', 'success'); // Feedback
+            closeExportModal(); // Close modal on success
+        }
+
+    } catch (error) {
+        console.error('Report generation failed:', error);
+        showToast(`Error: ${error.message}`, 'error');
+    } finally {
+        // Ensure button is re-enabled regardless of outcome
+        // Add a check in case generateBtn became null somehow (unlikely but safe)
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Generate Report';
+        }
+    }
+}
+
+// Attach listeners AFTER the DOM is loaded - CONSOLIDATED BLOCK
+document.addEventListener('DOMContentLoaded', () => {
+    // Export Report Listeners
+    const exportBtn = document.getElementById('exportReportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', openExportModal);
+    } else {
+        console.error("Export button (#exportReportBtn) not found!");
+    }
+
+    const exportForm = document.getElementById('exportReportForm');
+    if (exportForm) {
+        exportForm.addEventListener('submit', handleReportGeneration);
+    } else {
+         console.error("Export form (#exportReportForm) not found!");
+    }
+
+    // Dashboard Initializers
+    const homeElement = document.getElementById('home');
+    if (homeElement && !homeElement.classList.contains('hidden')) {
+        updateDashboard(); // Update dashboard content if it's the default view
+    }
+    initializeCalendar(); // Initialize the mini calendar widget
+    updateClock(); // Set initial clock time
+    setInterval(updateClock, 1000); // Update clock every second
+
+    // Appointments Listeners
+    const appointmentsReloadBtn = document.getElementById('appointmentsReloadBtn');
+    if (appointmentsReloadBtn) {
+        appointmentsReloadBtn.addEventListener('click', loadAppointments);
+    }
+    const appointmentsStatusFilter = document.getElementById('appointmentsStatusFilter');
+     if (appointmentsStatusFilter) {
+        appointmentsStatusFilter.addEventListener('change', loadAppointments);
+     }
+     // Consider calling loadAppointments() here if needed on initial load,
+     // or rely on showSection('appointments') to call it.
+
+     // Other initializers if needed...
+     // Example: loadCustomers(); // If chat customer list needs loading on init
+     // Example: fetchOrders(); // If orders need loading on init (currently handled by showSection)
+
+});
+// <!-- ================================================================== -->
+// <!-- ==================== END  EXPORT REPORT      ===================== -->
 // <!-- ================================================================== -->
 
 // <!-- ================================================================== -->
 // <!-- ==================== ANALYTICS         SCRIPT ===================== -->
 // <!-- ================================================================== -->
-// // // // Global chart instances to prevent duplicates
+// Global chart instances to prevent duplicates
 let salesTrendChartInstance = null;
 let earningsChartInstance = null;
 let salesByCategoryChartInstance = null;
-let customerSatisfactionChartInstance = null;
 let isAnalyticsInitialized = false;
 
 function initializeAnalyticsCharts() {
@@ -2510,14 +3015,13 @@ function initializeAnalyticsCharts() {
     if (salesPeriodSelector) {
         salesPeriodSelector.addEventListener('change', updateAnalyticsData);
     }
-    
+
     setupAllCharts(); // Create the empty chart canvases.
     isAnalyticsInitialized = true;
 }
 
 async function setupAllCharts() {
     // This function creates the chart instances with their initial configurations.
-    // The data will be loaded by updateAnalyticsData().
 
     // 1. Sales Trend Line Chart
     const salesCtx = document.getElementById('salesTrendChart')?.getContext('2d');
@@ -2525,16 +3029,19 @@ async function setupAllCharts() {
         if (salesTrendChartInstance) salesTrendChartInstance.destroy();
         salesTrendChartInstance = new Chart(salesCtx, {
             type: 'line',
-            data: { labels: [], datasets: [] },
-            options: {
+            data: { labels: [], datasets: [] }, // Initially empty
+            options: { // Consistent options
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } },
                     tooltip: { mode: 'index', intersect: false, backgroundColor: '#fff', titleColor: '#333', bodyColor: '#666', borderColor: '#ddd', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: true }
                 },
                 scales: {
-                    y: { beginAtZero: true, grid: { drawBorder: false }, ticks: { callback: value => `₱${value}` } },
+                    y: { beginAtZero: true, grid: { drawBorder: false }, ticks: { callback: value => `₱${value.toFixed(0)}` } },
                     x: { grid: { display: false } }
+                },
+                elements: {
+                     line: { tension: 0.3 } // Smooth lines
                 }
             }
         });
@@ -2546,186 +3053,163 @@ async function setupAllCharts() {
         if (earningsChartInstance) earningsChartInstance.destroy();
         earningsChartInstance = new Chart(earningsCtx, {
             type: 'doughnut',
-            data: { labels: [], datasets: [] },
-            options: { responsive: true, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+            data: { labels: ['Offline', 'Online'], datasets: [] }, // Set labels initially
+            options: { // Consistent options
+                 responsive: true,
+                 cutout: '75%',
+                 plugins: {
+                     legend: { display: false }, // Using custom legend div
+                     tooltip: {
+                        enabled: true,
+                        callbacks: { // Format tooltip to show currency
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                 }
+            }
         });
     }
 
-    // 3. Sales by Product Bar Chart
+    // 3. Sales by Category Bar Chart
     const categoryCtx = document.getElementById('salesByCategoryChart')?.getContext('2d');
     if (categoryCtx) {
         if (salesByCategoryChartInstance) salesByCategoryChartInstance.destroy();
         salesByCategoryChartInstance = new Chart(categoryCtx, {
             type: 'bar',
             data: { labels: [], datasets: [] },
-            options: {
+            options: { // Consistent options
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { drawBorder: false } }, x: { grid: { display: false } } }
+                plugins: {
+                    legend: { display: false },
+                     tooltip: {
+                        callbacks: { // Format tooltip to show currency
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                     label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                     y: { beginAtZero: true, grid: { drawBorder: false }, ticks: { callback: value => `₱${value.toFixed(0)}`, precision: 0 } }, // Currency format
+                     x: { grid: { display: false } }
+                }
             }
         });
     }
 
-    // 4. Customer Satisfaction Polar Area Chart
-    const satisfactionCtx = document.getElementById('customerSatisfactionChart')?.getContext('2d');
-    if (satisfactionCtx) {
-        if (customerSatisfactionChartInstance) customerSatisfactionChartInstance.destroy();
-        customerSatisfactionChartInstance = new Chart(satisfactionCtx, {
-            type: 'polarArea',
-            data: { labels: [], datasets: [] },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
-                scales: { r: { ticks: { display: false }, grid: { circular: true } } }
-            }
-        });
-    }
-
-    await updateAnalyticsData(); // Load the initial data into the new charts.
+    await updateAnalyticsData(); // Load the initial data into the chart structures.
 }
 
 async function updateAnalyticsData() {
     const period = document.getElementById('salesPeriod')?.value || 'month';
-    const apiHeaders = { 'Authorization': `Bearer ${token}` };
+    const apiHeaders = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
 
     try {
-        // Fetch all data sources in parallel for efficiency.
-        const [ordersRes, transactionsRes, reviewsRes] = await Promise.all([
-            fetch('http://127.0.0.1:8000/api/admin/orders', { headers: apiHeaders }),
-            fetch('http://127.0.0.1:8000/api/transactions', { headers: apiHeaders }),
-            fetch('http://127.0.0.1:8000/api/reviews', { headers: apiHeaders }) // Assuming a /reviews endpoint exists.
+        // Fetch data from the specific report endpoints
+        const [
+            salesTrendsRes,
+            earningsBreakdownRes,
+            salesByCategoryRes
+        ] = await Promise.all([
+            fetch(`http://127.0.0.1:8000/api/reports/sales-trends?period=${period}`, { headers: apiHeaders }),
+            fetch('http://127.0.0.1:8000/api/reports/earnings-breakdown', { headers: apiHeaders }),
+            fetch('http://127.0.0.1:8000/api/reports/sales-by-category', { headers: apiHeaders })
         ]);
 
-        const orders = ordersRes.ok ? await ordersRes.json() : [];
-        const transactions = transactionsRes.ok ? await transactionsRes.json() : [];
-        const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
+        // Check responses
+        if (!salesTrendsRes.ok) throw new Error(`Failed to fetch sales trends: ${salesTrendsRes.statusText}`);
+        if (!earningsBreakdownRes.ok) throw new Error(`Failed to fetch earnings breakdown: ${earningsBreakdownRes.statusText}`);
+        if (!salesByCategoryRes.ok) throw new Error(`Failed to fetch sales by category: ${salesByCategoryRes.statusText}`);
 
-        // --- 1. Process data for Sales Trend (Line Chart) ---
+        // Convert responses to JSON
+        const salesTrendsData = await salesTrendsRes.json();
+        const earningsBreakdownData = await earningsBreakdownRes.json();
+        const salesByCategoryData = await salesByCategoryRes.json();
+
+        // --- 1. Update Sales Trend (Line Chart) ---
         if (salesTrendChartInstance) {
-            const salesDataMap = new Map();
-
-            // Helper function to group sales by the selected period (day, week, etc.)
-            const processSaleEntry = (dateStr, amount) => {
-                const date = new Date(dateStr);
-                let key;
-                switch (period) {
-                    case 'day': key = date.toLocaleDateString('en-CA'); break; // YYYY-MM-DD for sorting
-                    case 'week':
-                        const firstDay = new Date(date.setDate(date.getDate() - date.getDay()));
-                        key = `Week of ${firstDay.toLocaleDateString('en-CA')}`;
-                        break;
-                    case 'month': key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; break; // YYYY-MM
-                    case 'year': key = `${date.getFullYear()}`; break;
-                }
-                salesDataMap.set(key, (salesDataMap.get(key) || 0) + parseFloat(amount || 0));
-            };
-
-            // Process delivered online orders
-            orders.filter(o => o.tracking_stage === 'Delivered').forEach(order => processSaleEntry(order.created_at, order.total));
-            // Process successful manual transactions
-            transactions.filter(t => t.order_status === 'Successful').forEach(tx => processSaleEntry(tx.created_at, tx.unit_price * tx.quantity));
-
-            const sortedEntries = [...salesDataMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-            const labels = sortedEntries.map(entry => entry[0]);
-            const data = sortedEntries.map(entry => entry[1]);
+            const validTrendsData = Array.isArray(salesTrendsData) ? salesTrendsData : [];
+            const labels = validTrendsData.map(entry => entry.period); // Use 'period' field from controller
+            const data = validTrendsData.map(entry => entry.total_sales); // Use 'total_sales' field from controller
 
             salesTrendChartInstance.data.labels = labels;
             salesTrendChartInstance.data.datasets = [{
-                label: 'Total Sales',
-                data: data,
-                borderColor: '#EF534F',
-                backgroundColor: 'rgba(239, 83, 79, 0.1)',
-                tension: 0.3,
-                fill: true
+                label: 'Total Sales', data: data, borderColor: '#EF534F',
+                backgroundColor: 'rgba(239, 83, 79, 0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#EF534F', pointRadius: 3, pointHoverRadius: 5
             }];
             salesTrendChartInstance.update();
         }
 
-        // --- 2. Process data for Earnings Breakdown (Doughnut Chart) ---
+        // --- 2. Update Earnings Breakdown (Doughnut Chart) ---
         if (earningsChartInstance) {
-            const offlineTotal = transactions.filter(t => t.order_status === 'Successful').reduce((sum, t) => sum + (parseFloat(t.unit_price || 0) * parseInt(t.quantity || 0)), 0);
-            const onlineTotal = orders.filter(o => o.tracking_stage === 'Delivered').reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
-            const total = offlineTotal + onlineTotal;
+            // Data structure from controller: { "Offline": value, "Online": value }
+            const offlineTotal = earningsBreakdownData?.Offline ?? 0;
+            const onlineTotal = earningsBreakdownData?.Online ?? 0;
+            const total = Number(offlineTotal) + Number(onlineTotal);
 
-            earningsChartInstance.data = {
-                labels: ['Offline', 'Online'],
-                datasets: [{
-                    data: [offlineTotal, onlineTotal],
-                    backgroundColor: ['#4A90E2', '#F5A623'],
-                    borderWidth: 0,
-                }]
-            };
+            earningsChartInstance.data.datasets = [{
+                 data: [offlineTotal, onlineTotal], backgroundColor: ['#4A90E2', '#F5A623'], borderWidth: 0, hoverOffset: 4
+            }];
+            // Labels are already set in setupAllCharts
             earningsChartInstance.update();
 
-            document.getElementById('earningsTotal').textContent = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('offlineEarnings').textContent = `₱${offlineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('onlineEarnings').textContent = `₱${onlineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            // Update DOM elements for legend and total
+            const earningsTotalEl = document.getElementById('earningsTotal');
+            if (earningsTotalEl) earningsTotalEl.textContent = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            const offlineEarningsEl = document.getElementById('offlineEarnings');
+            if (offlineEarningsEl) offlineEarningsEl.textContent = `₱${Number(offlineTotal).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            const onlineEarningsEl = document.getElementById('onlineEarnings');
+             if (onlineEarningsEl) onlineEarningsEl.textContent = `₱${Number(onlineTotal).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         }
 
-        // --- 3. Process data for Sales by Product (Bar Chart) ---
+        // --- 3. Update Sales by Category (Bar Chart) ---
         if (salesByCategoryChartInstance) {
-            const productMap = new Map();
-            
-            // Process delivered online orders
-            orders.filter(o => o.tracking_stage === 'Delivered').forEach(order => {
-                order.items?.forEach(item => {
-                    const name = item.product?.name;
-                    if (name) productMap.set(name, (productMap.get(name) || 0) + parseInt(item.quantity || 0));
-                });
-            });
-
-            // Process successful manual transactions
-            transactions.filter(t => t.order_status === 'Successful').forEach(tx => {
-                const name = tx.item_name;
-                if (name) productMap.set(name, (productMap.get(name) || 0) + parseInt(tx.quantity || 0));
-            });
-
-            const sortedProducts = [...productMap.entries()].sort((a, b) => b[1] - a[1]);
-            const labels = sortedProducts.map(entry => entry[0]);
-            const data = sortedProducts.map(entry => entry[1]);
+            // Data structure from controller: [{ product_category: "Name", total_sales_value: value }, ...]
+             const validCategoryData = Array.isArray(salesByCategoryData) ? salesByCategoryData : [];
+             const labels = validCategoryData.map(entry => entry.product_category); // Use 'product_category'
+             const data = validCategoryData.map(entry => entry.total_sales_value); // Use 'total_sales_value'
 
             salesByCategoryChartInstance.data = {
                 labels: labels,
                 datasets: [{
-                    label: 'Quantity Sold',
+                    label: 'Total Sales (₱)',
                     data: data,
-                    backgroundColor: 'rgba(239, 83, 79, 0.7)',
-                    borderColor: '#EF534F',
-                    borderWidth: 1,
-                    borderRadius: 4
+                    backgroundColor: 'rgba(239, 83, 79, 0.7)', // Primary color with opacity
+                    borderColor: '#EF534F', // Primary color solid
+                    borderWidth: 1, borderRadius: 4, barThickness: 'flex', maxBarThickness: 40 // Make bars flexible but limit max width
                 }]
             };
+            // Y-axis ticks are configured in setupAllCharts
             salesByCategoryChartInstance.update();
         }
 
-        // --- 4. Process data for Customer Satisfaction (Polar Area Chart) ---
-        if (customerSatisfactionChartInstance) {
-            const ratingBuckets = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-            reviews.forEach(r => {
-                const rating = parseInt(r.rating);
-                if (ratingBuckets.hasOwnProperty(rating)) ratingBuckets[rating]++;
-            });
-
-            customerSatisfactionChartInstance.data = {
-                labels: ['Excellent (5★)', 'Good (4★)', 'Average (3★)', 'Poor (2★)', 'Very Poor (1★)'],
-                datasets: [{
-                    label: 'Number of Ratings',
-                    data: [ratingBuckets[5], ratingBuckets[4], ratingBuckets[3], ratingBuckets[2], ratingBuckets[1]],
-                    backgroundColor: [
-                        'rgba(74, 222, 128, 0.7)',  // Green
-                        'rgba(59, 130, 246, 0.7)',  // Blue
-                        'rgba(251, 191, 36, 0.7)', // Amber
-                        'rgba(249, 115, 22, 0.7)',  // Orange
-                        'rgba(239, 68, 68, 0.7)'   // Red
-                    ],
-                }]
-            };
-            customerSatisfactionChartInstance.update();
-        }
-
     } catch (error) {
+        // Handle any errors during data update
         console.error('Analytics update error:', error);
-        // You could add error messages to the UI here if needed.
+        // Optionally show a toast or error message in the UI
+        // Example: showToast(`Error updating analytics: ${error.message}`, 'error');
+        // Fallback UI states (optional, could show 'Error' in charts)
+        if (salesTrendChartInstance) { /* Clear or show error */ }
+        if (earningsChartInstance) { /* Clear or show error */ }
+        if (salesByCategoryChartInstance) { /* Clear or show error */ }
     }
 }
 
