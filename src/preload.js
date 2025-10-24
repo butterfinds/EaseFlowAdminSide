@@ -4,6 +4,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ✅ Login bridge
   login: (email, password) => ipcRenderer.invoke('admin-login', email, password),
 
-  // ✅ SMS bridge
-  sendSMS: (phone, message) => ipcRenderer.send('send-sms', { phone, message })
+  // ✅ SMS bridge (CHANGED to invoke)
+  sendSMS: (phone, message) => ipcRenderer.invoke('send-sms', { phone, message })
 });
