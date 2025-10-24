@@ -21,7 +21,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <!-- Excel Generation Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <!-- Your Custom Stylesheet (Last) -->
   <link rel="stylesheet" href="style.css" />
 
@@ -182,20 +185,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 <body>
-  <div class="sidebar">
-  <h2>EASEPrint</h2>
-  <ul>
-    <li onclick="showSection('home')"><i class="fas fa-home"></i> Dashboard</li>
-    <li onclick="showSection('pos')"><i class="fas fa-cash-register"></i> Point of Sale</li>
-    <li onclick="showSection('products')"><i class="fas fa-box-open"></i> Products</li>
-    <li onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> Orders</li>
-    <li onclick="showSection('appointments')"><i class="fas fa-calendar-alt"></i> Appointments</li>
-    <li onclick="showSection('tracking')"><i class="fas fa-truck"></i> Tracking</li>
-    <li onclick="showSection('transactions')"><i class="fas fa-receipt"></i> Transactions</li>
-    <li onclick="showSection('analytics')"><i class="fas fa-chart-line"></i> Analytics</li>
-    <li onclick="showSection('chat')"><i class="fas fa-comments"></i> Chat</li>
-    <li onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</li>
-  </ul>
+<div class="sidebar fixed top-0 left-0 h-screen w-60 bg-[#3F1A2B] text-white flex flex-col transition-all duration-300 z-50 shadow-lg">
+    <div class="flex items-center justify-center h-20 border-b border-gray-700">
+        <h2 class="text-2xl font-bold">EasePrint</h2>
+    </div>
+
+    <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
+        <a onclick="showSection('home')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="home">
+            <i class="fas fa-home w-5 h-5 mr-3"></i> Dashboard
+        </a>
+        <a onclick="showSection('pos')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="pos">
+            <i class="fas fa-cash-register w-5 h-5 mr-3"></i> Point of Sale
+        </a>
+        <a onclick="showSection('products')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="products">
+            <i class="fas fa-box-open w-5 h-5 mr-3"></i> Products
+        </a>
+        <a onclick="showSection('orders')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="orders">
+            <i class="fas fa-shopping-cart w-5 h-5 mr-3"></i> Orders
+        </a>
+        <a onclick="showSection('appointments')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="appointments">
+            <i class="fas fa-calendar-alt w-5 h-5 mr-3"></i> Appointments
+        </a>
+        <a onclick="showSection('tracking')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="tracking">
+            <i class="fas fa-truck w-5 h-5 mr-3"></i> Tracking
+        </a>
+        <a onclick="showSection('transactions')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="transactions">
+            <i class="fas fa-receipt w-5 h-5 mr-3"></i> Transactions
+        </a>
+        <a onclick="showSection('analytics')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="analytics">
+            <i class="fas fa-chart-line w-5 h-5 mr-3"></i> Analytics
+        </a>
+        <a onclick="showSection('chat')" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-[#5a2e41] hover:text-white transition-colors cursor-pointer sidebar-link" data-section="chat">
+            <i class="fas fa-comments w-5 h-5 mr-3"></i> Chat
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-gray-700">
+        <a onclick="logout()" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-[#5a2e41] hover:text-red-300 transition-colors cursor-pointer">
+            <i class="fas fa-sign-out-alt w-5 h-5 mr-3"></i> Logout
+        </a>
+    </div>
 </div>
 
 <div class="main">
@@ -318,52 +347,113 @@
 <!-- ================================================================== -->
 <!-- ==================== EXPORT REPORT MODAL ===================== -->
 <!-- ================================================================== -->
+<!-- ================================================================== -->
+<!-- ==================== EXPORT REPORT MODAL ===================== -->
+<!-- ================================================================== -->
+<!-- [REPLACED] This entire modal div is replaced with the new, cleaner UI -->
 <div id="exportReportModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-[1001]">
-  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-    <h3 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Export Sales Report</h3>
-    <form id="exportReportForm" class="space-y-5">
-      <div>
-        <label for="exportReportType" class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
-        <!-- Updated Select Styling -->
-        <select id="exportReportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400">
-          <option value="summary">Sales Summary (Totals)</option>
-          <option value="detailed">Detailed Transactions</option>
-          <option value="category">Sales by Category</option>
-        </select>
-      </div>
-      <!-- Date Range Inputs and Presets -->
-      <div class="space-y-2">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="exportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-            <!-- Updated Input Styling -->
-            <input type="date" id="exportStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400" required>
-          </div>
-          <div>
-            <label for="exportEndDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-            <!-- Updated Input Styling -->
-            <input type="date" id="exportEndDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED4A69] focus:border-[#ED4A69] transition duration-150 ease-in-out hover:border-gray-400" required>
-          </div>
-        </div>
-        <div class="flex flex-wrap space-x-2 justify-center pt-2">
-            <!-- Updated Preset Button Styling -->
-            <button type="button" onclick="setExportDateRange('week')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Week</button>
-            <button type="button" onclick="setExportDateRange('lastWeek')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">Last Week</button>
-            <button type="button" onclick="setExportDateRange('month')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Month</button>
-            <button type="button" onclick="setExportDateRange('lastMonth')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">Last Month</button>
-            <button type="button" onclick="setExportDateRange('year')" class="px-3 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition duration-150 ease-in-out mb-1 focus:outline-none focus:ring-2 focus:ring-slate-400">This Year</button>
-        </div>
-      </div>
-      <p class="text-sm text-gray-500">Note: The report will be generated as an Excel (.xlsx) file.</p>
-      <div class="flex justify-end space-x-3 pt-4">
-        <!-- Updated Action Button Styling -->
-        <button type="button" onclick="closeExportModal()" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
-        <button type="submit" id="generateReportBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50">Generate Report</button>
-      </div>
-    </form>
-  </div>
-</div>
+    
+    <!-- Modal Card (New UI) -->
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full">
+        
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            Export Sales Report
+        </h1>
 
+        <!-- [UPDATED] Kept your id="exportReportForm" and used space-y-6 from the draft -->
+        <form id="exportReportForm" class="space-y-6">
+
+            <!-- Report Type -->
+            <div>
+                <label for="exportReportType" class="block text-sm font-medium text-gray-700 mb-1">
+                    Report Type
+                </label>
+                <div class="relative">
+                    <!-- [UPDATED] Kept your id="exportReportType" and <option> values -->
+                    <select id="exportReportType" name="report-type" class="w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="summary">Sales Summary (Totals)</option>
+                        <option value="detailed">Detailed Transactions</option>
+                        <option value="category">Sales by Category</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                        <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Start Date -->
+                <div>
+                    <label for="exportStartDate" class="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                    </label>
+                      <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-start pt-3 pl-3 text-gray-400">  <i data-lucide="calendar-days" class="h-5 w-5"></i>
+                            </div>
+                            <input type="text" id="exportStartDate" name="start-date" class="w-full rounded-lg border border-gray-300 bg-white p-3 pl-10 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="YYYY-MM-DD" required>
+                      </div>
+                </div>
+                <!-- End Date -->
+                <div>
+                    <label for="exportEndDate" class="block text-sm font-medium text-gray-700 mb-1">
+                        End Date
+                    </label>
+                     <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-start pt-3 pl-3 text-gray-400">  <i data-lucide="calendar-days" class="h-5 w-5"></i>
+                            </div>
+                            <input type="text" id="exportEndDate" name="end-date" class="w-full rounded-lg border border-gray-300 bg-white p-3 pl-10 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="YYYY-MM-DD" required>
+                      </div>
+                </div>
+            </div>
+
+            <!-- Date Presets -->
+            <!-- [UPDATED] Kept your onclick="setExportDateRange(...)" functions on the new buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="setExportDateRange('week')" class="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    This Week
+                </button>
+                <button type="button" onclick="setExportDateRange('lastWeek')" class="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    Last Week
+                </button>
+                <button type="button" onclick="setExportDateRange('month')" class="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    This Month
+                </button>
+                <button type="button" onclick="setExportDateRange('lastMonth')" class="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    Last Month
+                </button>
+                <button type="button" onclick="setExportDateRange('year')" class="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    This Year
+                </button>
+            </div>
+
+            <!-- Note -->
+            <div class="flex items-start gap-3 rounded-lg bg-gray-50 p-4">
+                <div class="flex-shrink-0 text-gray-400">
+                    <i data-lucide="info" class="h-5 w-5"></i>
+                </div>
+                <p class="text-sm text-gray-600">
+                    Note: The report will be generated as an Excel (.xlsx) file.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3 pt-4">
+                <!-- [UPDATED] Kept your onclick="closeExportModal()" -->
+                <button type="button" onclick="closeExportModal()" class="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 sm:mt-0 sm:w-auto">
+                    <i data-lucide="x" class="h-4 w-4"></i>
+                    Cancel
+                </button>
+                <!-- [UPDATED] Kept your id="generateReportBtn" -->
+                <button type="submit" id="generateReportBtn" class="flex w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 sm:w-auto mb-3 sm:mb-0">
+                    <i data-lucide="download" class="h-4 w-4"></i>
+                    Generate Report
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
 
 <!-- Your main script continues below -->
 <!-- ================================================================== -->
@@ -1019,6 +1109,9 @@
   <script>
     const token = localStorage.getItem('adminToken');
     if (!token) window.location.href = './index.html';
+    // Calendar variable
+    let fpStartDateInstance = null;
+    let fpEndDateInstance = null;
 
 function showSection(id) {
       document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
@@ -1232,7 +1325,7 @@ function initializePOS() {
                 if (product.stock > 0) {
                     addToPOSCart(product.id);
                 } else {
-                    alert('This product is out of stock.');
+                    showToast('This product is out of stock.');
                 }
             });
             posProductGrid.appendChild(card);
@@ -1247,13 +1340,13 @@ function initializePOS() {
         const existingItem = posCartItems.find(item => item.id === productId);
         if (existingItem) {
             if (existingItem.quantity >= product.stock) {
-                alert(`Stock limit reached for ${product.name}. Only ${product.stock} items available.`);
+                showToast(`Stock limit reached for ${product.name}. Only ${product.stock} items available.`);
                 return;
             }
             existingItem.quantity++;
         } else {
             if (product.stock <= 0) {
-                alert(`${product.name} is out of stock.`);
+                showToast(`${product.name} is out of stock.`);
                 return;
             }
             posCartItems.push({ ...product, quantity: 1 });
@@ -1290,7 +1383,7 @@ function initializePOS() {
     
     async function recordPOSSale() {
         if (posCartItems.length === 0) {
-            alert("Please add products to the sale.");
+            showToast("Please add products to the sale.");
             return;
         }
 
@@ -1347,13 +1440,13 @@ function initializePOS() {
                 fetchTransactions();
             }
             
-            alert(`Sale recorded successfully! Order ID: ${squareResult.order.id}`);
+            showToast(`Sale recorded successfully! Order ID: ${squareResult.order.id}`);
             clearPOSSale();
             loadInventory();
 
         } catch (error) {
             console.error('Failed to record sale:', error);
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`);
         } finally {
             posRecordSaleBtn.disabled = false;
             posRecordSaleBtn.textContent = 'Record Sale';
@@ -1367,7 +1460,7 @@ function initializePOS() {
         let newQuantity = parseInt(inputElement.value) || 1;
 
         if (product && newQuantity > product.stock) {
-            alert(`Stock limit reached. Only ${product.stock} items available for ${product.name}.`);
+            showToast(`Stock limit reached. Only ${product.stock} items available for ${product.name}.`);
             newQuantity = product.stock;
             inputElement.value = newQuantity; // Correct the input value in the UI
         }
@@ -1509,7 +1602,7 @@ function editProduct(id) {
     .then(products => {
         const p = products.find(prod => prod.id === id);
         if (!p) {
-            alert('Product not found.');
+            showToast('Product not found.');
             return;
         }
 
@@ -1524,7 +1617,7 @@ function editProduct(id) {
     })
     .catch(err => {
         console.error("Error fetching product data:", err);
-        alert("Could not load product data for editing.");
+        showToast("Could not load product data for editing.");
     });
 }
 
@@ -1571,10 +1664,10 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
         closeEditModal();
         loadProducts(); 
         initializePOS(); 
-        alert('Product updated successfully!');
+        showToast('Product updated successfully!');
     } catch (err) {
         console.error('Update error:', err);
-        alert('Error updating product: ' + err.message);
+        showToast('Error updating product: ' + err.message);
     }
 });
 
@@ -1601,7 +1694,7 @@ async function deleteProduct(id) {
     loadProducts();
   } catch (err) {
     console.error('Delete error:', err);
-    alert('Delete failed: ' + err.message);
+    showToast('Delete failed: ' + err.message);
   }
 }
 
@@ -2142,7 +2235,7 @@ async function deleteTransaction(id) {
     fetchTransactions();
   } catch (err) {
     console.error("Delete error:", err);
-    alert("Error deleting transaction: " + err.message);
+    showToast("Error deleting transaction: " + err.message);
   }
 }
 
@@ -2649,16 +2742,33 @@ function initializeCalendar() {
 }
 // // // // Add listeners for the new modal
 document.addEventListener('DOMContentLoaded', () => {
-    const exportBtn = document.getElementById('exportReportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', openExportModal);
-    }
+    // [NEW] Initialize Flatpickr Date Pickers
+    fpStartDateInstance = flatpickr("#exportStartDate", {
+        dateFormat: "Y-m-d",
+        disableMobile: true,
+        onChange: function(selectedDates, dateStr, instance) {
+            // When start date changes, set the minimum date for the end date picker
+            if (fpEndDateInstance && selectedDates[0]) {
+                fpEndDateInstance.set('minDate', selectedDates[0]);
+            }
+        }
+    });
     
-    const exportForm = document.getElementById('exportReportForm');
-    if (exportForm) {
-        exportForm.addEventListener('submit', handleReportGeneration);
-    }
+    fpEndDateInstance = flatpickr("#exportEndDate", {
+        dateFormat: "Y-m-d",
+        disableMobile: true,
+        maxDate: "today",
+        onChange: function(selectedDates, dateStr, instance) {
+            // When end date changes, set the maximum date for the start date picker
+            if (fpStartDateInstance && selectedDates[0]) {
+                fpStartDateInstance.set('maxDate', selectedDates[0]);
+            }
+        }
+    });
 });
+
+    // Export Report Listeners
+    const exportBtn = document.getElementById('exportReportBtn');
 
 function openExportModal() {
     const modal = document.getElementById('exportReportModal');
@@ -2698,299 +2808,398 @@ document.addEventListener('DOMContentLoaded', () => {
 // <!-- ================================================================== -->
 // <!-- ====================      EXPORT REPORT      ===================== -->
 // <!-- ================================================================== -->
-function setExportDateRange(period) {
-    const today = new Date();
-    const startDateInput = document.getElementById('exportStartDate');
-    const endDateInput = document.getElementById('exportEndDate');
+  // --- Opens the export modal and sets default dates ---
+  function openExportModal() {
+      const modal = document.getElementById('exportReportModal');
+      if (!modal) {
+           console.error("Export modal element (#exportReportModal) not found!");
+           // Assuming showToast is defined elsewhere
+           // showToast("Error: Export dialog could not be opened.", "error"); 
+           return;
+      }
+      
+      const startDateInput = document.getElementById('exportStartDate');
+      const endDateInput = document.getElementById('exportEndDate');
+      
+      if (!startDateInput || !endDateInput) {
+           console.error("Date input elements (#exportStartDate or #exportEndDate) not found inside the modal!");
+           // Assuming showToast is defined elsewhere
+           // showToast("Error: Date inputs missing in the export dialog.", "error");
+           return; 
+      }
 
-    // Check if elements exist before proceeding
-    if (!startDateInput || !endDateInput) {
-        console.error("Date input elements not found in setExportDateRange.");
-        return;
-    }
+      // Set default dates to the current month
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Use flatpickr.setDate() to update the calendars
+      if (fpStartDateInstance && fpEndDateInstance) {
+          fpStartDateInstance.setDate(firstDayOfMonth, false); // false = don't trigger change event
+          fpEndDateInstance.setDate(todayStr, false);
+          // Ensure date constraints are set correctly when opening
+          fpEndDateInstance.set('maxDate', todayStr); 
+          fpStartDateInstance.set('maxDate', todayStr); 
+          // Ensure minDate is reset or set appropriately if needed, e.g., based on firstDayOfMonth
+          fpEndDateInstance.set('minDate', firstDayOfMonth); 
+      } else {
+          // Fallback if flatpickr failed to init
+          console.warn("Flatpickr instances not ready during openExportModal");
+          startDateInput.value = firstDayOfMonth;
+          endDateInput.value = todayStr;
+      }
+      
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex'; // Explicitly set display
 
-    // Adjust for timezone offset to get local date string correctly
-    const tzoffset = today.getTimezoneOffset() * 60000; // offset in milliseconds
-    const localISOTime = (date) => {
-        if (!date || isNaN(date.getTime())) return ''; // Handle invalid dates
-        return new Date(date.getTime() - tzoffset).toISOString().split('T')[0];
-    }
+      // Call lucide to render icons (like the calendar) inside the modal
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      } else {
+        console.warn("Lucide library not available when trying to create icons in modal.");
+      }
+  }
 
-    let startDate, endDate;
-    endDate = new Date(); // Use a new date object for end date manipulation
+  // --- Closes the export modal ---
+  function closeExportModal() {
+      const modal = document.getElementById('exportReportModal');
+      if (modal) {
+          modal.classList.add('hidden');
+          modal.style.display = 'none'; // Explicitly hide
+      }
+  }
 
-    try {
-        switch (period) {
-            case 'week': // This Week (Mon-Today)
-                const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday...
-                startDate = new Date(today);
-                // Adjust to start of week (Monday)
-                startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-                endDate = today; // Keep end date as today
-                break;
-            case 'lastWeek': // Previous Week (Mon-Sun)
-                 startDate = new Date(today);
-                 // Go back to previous Monday
-                 startDate.setDate(today.getDate() - today.getDay() - 6);
-                 endDate = new Date(startDate);
-                 // Go forward to Sunday
-                 endDate.setDate(startDate.getDate() + 6);
-                break;
-            case 'month': // This Month (1st - Today)
-                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                endDate = today; // Keep end date as today
-                break;
-            case 'lastMonth': // Previous Full Month
-                 startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                 endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
-                 break;
-            case 'year': // This Year (Jan 1st - Today)
-                startDate = new Date(today.getFullYear(), 0, 1);
-                endDate = today; // Keep end date as today
-                break;
-            default: // Default to This Month
-                 startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                 endDate = today;
-                 break;
-        }
+  // --- Sets the date range based on preset buttons ---
+  function setExportDateRange(period) {
+      const today = new Date();
+      const startDateInput = document.getElementById('exportStartDate'); // Still needed for reference?
+      const endDateInput = document.getElementById('exportEndDate'); // Still needed for reference?
 
-        startDateInput.value = localISOTime(startDate);
-        endDateInput.value = localISOTime(endDate);
+      // Get Flatpickr instances
+      const fpStartDate = fpStartDateInstance;
+      const fpEndDate = fpEndDateInstance;
 
-        // Also update the max attribute for the end date when setting presets
-        endDateInput.max = localISOTime(new Date());
+      // Check if instances exist
+      if (!startDateInput || !endDateInput || !fpStartDate || !fpEndDate) {
+          console.error("Date input elements or flatpickr instances not found in setExportDateRange.");
+          return;
+      }
 
-    } catch (error) {
-        console.error("Error setting date range:", error);
-        // Fallback to setting default dates if calculation fails
-        startDateInput.value = localISOTime(new Date(today.getFullYear(), today.getMonth(), 1));
-        endDateInput.value = localISOTime(today);
-        endDateInput.max = localISOTime(new Date());
-    }
-}
+      // Adjust for timezone offset to get local date string correctly
+      const tzoffset = today.getTimezoneOffset() * 60000; // offset in milliseconds
+      const localISOTime = (date) => {
+          if (!date || isNaN(date.getTime())) return ''; // Handle invalid dates
+          try {
+            return new Date(date.getTime() - tzoffset).toISOString().split('T')[0];
+          } catch (e) {
+            console.error("Error formatting date:", date, e);
+            return '';
+          }
+      }
 
+      let startDate, endDate;
+      // Use a new date object for end date manipulation to avoid modifying 'today'
+      let tempEndDate = new Date(); 
 
-// Define Export Functions first
-function openExportModal() {
-    const modal = document.getElementById('exportReportModal');
-    // Check if modal exists
-    if (!modal) {
-        console.error("Export modal element (#exportReportModal) not found!");
-        showToast("Error: Export dialog could not be opened.", "error");
-        return;
-    }
+      try {
+          switch (period) {
+              case 'week': // This Week (Mon-Today)
+                  const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday...
+                  startDate = new Date(today);
+                  // Adjust to start of week (Monday)
+                  startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+                  endDate = today; // Keep end date as today
+                  break;
+              case 'lastWeek': // Previous Week (Mon-Sun)
+                   startDate = new Date(today);
+                  // Go back to previous Monday (adjusts for Sunday being 0)
+                  startDate.setDate(today.getDate() - (today.getDay() === 0 ? 7 : today.getDay()) - 6);
+                  endDate = new Date(startDate);
+                  // Go forward to Sunday
+                  endDate.setDate(startDate.getDate() + 6);
+                  break;
+              case 'month': // This Month (1st - Today)
+                  startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                  endDate = today; // Keep end date as today
+                  break;
+              case 'lastMonth': // Previous Full Month
+                   startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                   // Last day of previous month
+                   endDate = new Date(today.getFullYear(), today.getMonth(), 0); 
+                   break;
+              case 'year': // This Year (Jan 1st - Today)
+                  startDate = new Date(today.getFullYear(), 0, 1);
+                  endDate = today; // Keep end date as today
+                  break;
+              default: // Default to This Month
+                   startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                   endDate = today;
+                   break;
+          }
 
-    const startDateInput = document.getElementById('exportStartDate');
-    const endDateInput = document.getElementById('exportEndDate');
+          const startDateStr = localISOTime(startDate);
+          const endDateStr = localISOTime(endDate);
+          const todayStr = localISOTime(new Date()); // Today's date string for maxDate
 
-    // Check if date inputs exist WITHIN the modal
-    if (!startDateInput || !endDateInput) {
-        console.error("Date input elements (#exportStartDate or #exportEndDate) not found inside the modal!");
-        showToast("Error: Date inputs missing in the export dialog.", "error");
-        return; // Stop if inputs are missing
-    }
+          // Use flatpickr.setDate() to update the calendars
+          fpStartDate.setDate(startDateStr, true); // true = trigger onChange
+          fpEndDate.setDate(endDateStr, true);
 
-    // Set default dates to the current month using the helper function
-    setExportDateRange('month'); // This now includes setting the max attribute
-
-    // --- Restrict End Date ---
-    // Adjust for timezone offset to get local date string correctly for max attribute
-    const today = new Date();
-    const tzoffset = today.getTimezoneOffset() * 60000;
-    const todayMax = new Date(today.getTime() - tzoffset).toISOString().split('T')[0];
-    endDateInput.max = todayMax;
-    // --- End Restriction ---
-
-
-    // Make modal visible by removing 'hidden' and setting display style
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex'; // Explicitly set display
-}
-
-function closeExportModal() {
-    const modal = document.getElementById('exportReportModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none'; // Explicitly hide
-    }
-}
-
-async function handleReportGeneration(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const generateBtn = document.getElementById('generateReportBtn');
-    // Double check elements exist before accessing values
-    const reportTypeSelect = document.getElementById('exportReportType');
-    const startDateInput = document.getElementById('exportStartDate');
-    const endDateInput = document.getElementById('exportEndDate');
-
-    if (!generateBtn || !reportTypeSelect || !startDateInput || !endDateInput) {
-         console.error("Form elements missing in export modal.");
-         showToast("Error: Cannot generate report due to missing form elements.", "error");
-         return;
-    }
-
-    generateBtn.disabled = true;
-    generateBtn.textContent = 'Generating...';
-
-    const reportType = reportTypeSelect.value;
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
-
-    // Validate dates
-    if (!startDate || !endDate) {
-        showToast("Please select both start and end dates.", "error");
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Report';
-        return;
-    }
-    // Prevent future dates (double check)
-    const today = new Date();
-    const tzoffset = today.getTimezoneOffset() * 60000;
-    const todayMax = new Date(today.getTime() - tzoffset).toISOString().split('T')[0];
-    if (endDate > todayMax) {
-         showToast("End date cannot be in the future.", "error");
-         endDateInput.value = todayMax; // Reset to today
-         generateBtn.disabled = false;
-         generateBtn.textContent = 'Generate Report';
-         return;
-    }
-    if (new Date(startDate) > new Date(endDate)) {
-        showToast("Start date cannot be after end date.", "error");
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Report';
-        return;
-    }
+          // Re-apply constraints after setting dates
+          fpEndDate.set('maxDate', todayStr); 
+          fpStartDate.set('maxDate', endDateStr); // Max start date is the selected end date
+          fpEndDate.set('minDate', startDateStr); // Min end date is the selected start date
 
 
-    try {
-        const apiUrl = `http://127.0.0.1:8000/api/reports/export-sales?type=${reportType}&start_date=${startDate}&end_date=${endDate}`;
+      } catch (error) {
+          console.error("Error setting date range:", error);
+          const defaultStart = localISOTime(new Date(today.getFullYear(), today.getMonth(), 1));
+          const defaultEnd = localISOTime(today);
+          const todayStr = localISOTime(new Date());
 
-        // Ensure token is defined and accessible (assuming it's globally available as 'token')
-        if (typeof token === 'undefined' || !token) {
-             throw new Error("Authentication token is missing.");
-        }
+          // Fallback using flatpickr
+          fpStartDate.setDate(defaultStart, true);
+          fpEndDate.setDate(defaultEnd, true);
+          fpEndDate.set('maxDate', todayStr);
+          fpStartDate.set('maxDate', defaultEnd);
+          fpEndDate.set('minDate', defaultStart);
+      }
+  }
 
-        const response = await fetch(apiUrl, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+  // --- Handles the report generation request ---
+  async function handleReportGeneration(event) {
+      event.preventDefault(); // Prevent default form submission
 
-        if (!response.ok) {
-            let errorMsg = `Failed to fetch report data (Status: ${response.status})`;
-            try {
-                const err = await response.json();
-                errorMsg = err.message || errorMsg; // Use server message if available
-            } catch (e) { /* Ignore JSON parse error, use status code message */ }
-            throw new Error(errorMsg);
-        }
+      const generateBtn = document.getElementById('generateReportBtn');
+      const reportTypeSelect = document.getElementById('exportReportType');
+      const startDateInput = document.getElementById('exportStartDate'); // The input element itself
+      const endDateInput = document.getElementById('exportEndDate'); // The input element itself
 
-        const data = await response.json();
+      // Double check elements exist before accessing values
+      if (!generateBtn || !reportTypeSelect || !startDateInput || !endDateInput) {
+           console.error("Form elements missing in export modal.");
+           // Assuming showToast is defined elsewhere
+           // showToast("Error: Cannot generate report due to missing form elements.", "error");
+           return;
+      }
 
-        // Check if data is specifically an empty array (valid response but no results)
-        if (Array.isArray(data) && data.length === 0) {
-             showToast('No data found for the selected criteria.', 'info'); // Use 'info' type
-             // Do not close modal - let user change dates
-        } else if (!data || (Array.isArray(data) && data.length === 0 && !data[0])) { // Improved check for invalid/empty data
-             showToast('Received invalid or empty data from server.', 'error');
-        }
-         else {
-            // --- Generate Excel file with better formatting ---
-            const ws = XLSX.utils.json_to_sheet(data);
-
-            // Calculate column widths
-            const colWidths = [];
-             // Check if data[0] exists before trying to get keys
-             if (data[0]) {
-                 const header = Object.keys(data[0]); // Get header names from the first data row
-                 header.forEach((h, index) => {
-                     let maxLen = h.length; // Start with header length
-                     data.forEach(row => {
-                         const cellValue = row[h];
-                         // Ensure cellValue is treated as a string for length check, handle null/undefined
-                         const cellLen = cellValue !== null && cellValue !== undefined ? String(cellValue).length : 0;
-                         if (cellLen > maxLen) {
-                             maxLen = cellLen;
-                         }
-                     });
-                     colWidths[index] = { wch: maxLen + 2 }; // Add a little padding
-                 });
-                 ws['!cols'] = colWidths; // Apply widths to worksheet
-             } else {
-                 console.warn("Cannot calculate column widths: No data rows returned.");
-             }
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...'; // Add loading indicator
 
 
-            // Add AutoFilter to the header row only if there's data and a range
-             if (ws['!ref']) { // Check if worksheet has a range defined
-                ws['!autofilter'] = { ref: XLSX.utils.encode_range(XLSX.utils.decode_range(ws['!ref'])) };
-             }
+      const reportType = reportTypeSelect.value;
+      // Get values directly from input elements, Flatpickr updates these
+      const startDate = startDateInput.value; 
+      const endDate = endDateInput.value;
 
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+      // Validate dates
+      if (!startDate || !endDate) {
+          // Assuming showToast is defined elsewhere
+          // showToast("Please select both start and end dates.", "error"); 
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '<i data-lucide="download" class="h-4 w-4"></i> Generate Report';
+           if (typeof lucide !== 'undefined') lucide.createIcons(); // Re-render icon
+          return;
+      }
+      
+      // Prevent future dates (double check, Flatpickr should handle this too)
+      const today = new Date();
+      const tzoffset = today.getTimezoneOffset() * 60000;
+      const todayMax = new Date(today.getTime() - tzoffset).toISOString().split('T')[0];
+      
+      if (endDate > todayMax) {
+           // Assuming showToast is defined elsewhere
+           // showToast("End date cannot be in the future.", "error");
+           // Correct the value via Flatpickr instance if available
+           if(fpEndDateInstance) fpEndDateInstance.setDate(todayMax, true); 
+           else endDateInput.value = todayMax; // Fallback
+           generateBtn.disabled = false;
+           generateBtn.innerHTML = '<i data-lucide="download" class="h-4 w-4"></i> Generate Report';
+           if (typeof lucide !== 'undefined') lucide.createIcons(); // Re-render icon
+           return;
+      }
+      
+      if (new Date(startDate) > new Date(endDate)) {
+          // Assuming showToast is defined elsewhere
+          // showToast("Start date cannot be after end date.", "error");
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '<i data-lucide="download" class="h-4 w-4"></i> Generate Report';
+           if (typeof lucide !== 'undefined') lucide.createIcons(); // Re-render icon
+          return;
+      }
 
-            const fileName = `EasePrint_Sales_${reportType}_${startDate}_to_${endDate}.xlsx`;
-            XLSX.writeFile(wb, fileName);
 
-            showToast('Report generated successfully!', 'success'); // Feedback
-            closeExportModal(); // Close modal on success
-        }
+      try {
+          const apiUrl = `http://127.0.0.1:8000/api/reports/export-sales?type=${reportType}&start_date=${startDate}&end_date=${endDate}`;
 
-    } catch (error) {
-        console.error('Report generation failed:', error);
-        showToast(`Error: ${error.message}`, 'error');
-    } finally {
-        // Ensure button is re-enabled regardless of outcome
-        // Add a check in case generateBtn became null somehow (unlikely but safe)
-        if (generateBtn) {
-            generateBtn.disabled = false;
-            generateBtn.textContent = 'Generate Report';
-        }
-    }
-}
+          // Ensure token is defined and accessible (assuming it's globally available as 'token')
+          if (typeof token === 'undefined' || !token) {
+               throw new Error("Authentication token is missing.");
+          }
 
-// Attach listeners AFTER the DOM is loaded - CONSOLIDATED BLOCK
-document.addEventListener('DOMContentLoaded', () => {
-    // Export Report Listeners
-    const exportBtn = document.getElementById('exportReportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', openExportModal);
-    } else {
-        console.error("Export button (#exportReportBtn) not found!");
-    }
+          const response = await fetch(apiUrl, {
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json' // Crucial for API to know we want JSON
+              }
+          });
 
-    const exportForm = document.getElementById('exportReportForm');
-    if (exportForm) {
-        exportForm.addEventListener('submit', handleReportGeneration);
-    } else {
-         console.error("Export form (#exportReportForm) not found!");
-    }
+          if (!response.ok) {
+              let errorMsg = `Failed to fetch report data (Status: ${response.status})`;
+              try {
+                  // Attempt to parse server error message
+                  const errData = await response.json(); 
+                  errorMsg = errData.message || errData.error || errorMsg; 
+              } catch (e) { 
+                  // If response is not JSON, use the status text
+                  errorMsg = `${errorMsg} - ${response.statusText}`;
+              }
+              throw new Error(errorMsg);
+          }
 
-    // Dashboard Initializers
-    const homeElement = document.getElementById('home');
-    if (homeElement && !homeElement.classList.contains('hidden')) {
-        updateDashboard(); // Update dashboard content if it's the default view
-    }
-    initializeCalendar(); // Initialize the mini calendar widget
-    updateClock(); // Set initial clock time
-    setInterval(updateClock, 1000); // Update clock every second
+          // Check content type BEFORE parsing as JSON
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+             // If the server didn't send JSON (e.g., HTML error page), handle it
+             const textResponse = await response.text(); // Get raw response
+             console.error("Non-JSON response received:", textResponse);
+             throw new Error(`Server returned unexpected content type: ${contentType}. Check server logs.`);
+          }
 
-    // Appointments Listeners
-    const appointmentsReloadBtn = document.getElementById('appointmentsReloadBtn');
-    if (appointmentsReloadBtn) {
-        appointmentsReloadBtn.addEventListener('click', loadAppointments);
-    }
-    const appointmentsStatusFilter = document.getElementById('appointmentsStatusFilter');
-     if (appointmentsStatusFilter) {
-        appointmentsStatusFilter.addEventListener('change', loadAppointments);
-     }
-     // Consider calling loadAppointments() here if needed on initial load,
-     // or rely on showSection('appointments') to call it.
 
-     // Other initializers if needed...
-     // Example: loadCustomers(); // If chat customer list needs loading on init
-     // Example: fetchOrders(); // If orders need loading on init (currently handled by showSection)
+          const data = await response.json();
 
-});
+          // Check if data is specifically an empty array (valid response but no results)
+          if (Array.isArray(data) && data.length === 0) {
+               // Assuming showToast is defined elsewhere
+               // showToast('No data found for the selected criteria.', 'info'); 
+               // Do not close modal - let user change dates
+          } else if (!data || (Array.isArray(data) && data.length > 0 && !data[0])) { // Improved check for invalid data
+               // Assuming showToast is defined elsewhere
+               // showToast('Received invalid data structure from server.', 'error');
+               console.error("Invalid data structure received:", data);
+          }
+           else {
+              // --- Generate Excel file with better formatting ---
+              const ws = XLSX.utils.json_to_sheet(data);
+
+              // Calculate column widths
+              const colWidths = [];
+               // Check if data[0] exists before trying to get keys
+               if (data[0]) {
+                   const header = Object.keys(data[0]); // Get header names from the first data row
+                   header.forEach((h, index) => {
+                       let maxLen = h.length; // Start with header length
+                       data.forEach(row => {
+                           const cellValue = row[h];
+                           // Ensure cellValue is treated as a string for length check, handle null/undefined
+                           const cellLen = cellValue !== null && cellValue !== undefined ? String(cellValue).length : 0;
+                           if (cellLen > maxLen) {
+                               maxLen = cellLen;
+                           }
+                       });
+                       colWidths[index] = { wch: maxLen + 2 }; // Add a little padding
+                   });
+                   ws['!cols'] = colWidths; // Apply widths to worksheet
+               } else {
+                   console.warn("Cannot calculate column widths: No data rows returned (but not an empty array).");
+               }
+
+
+              // Add AutoFilter to the header row only if there's data and a range
+               if (ws['!ref']) { // Check if worksheet has a range defined
+                   ws['!autofilter'] = { ref: XLSX.utils.encode_range(XLSX.utils.decode_range(ws['!ref'])) };
+               }
+
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+
+              const fileName = `EasePrint_Sales_${reportType}_${startDate}_to_${endDate}.xlsx`;
+              XLSX.writeFile(wb, fileName);
+
+               // Assuming showToast is defined elsewhere
+               // showToast('Report generated successfully!', 'success'); // Feedback
+              closeExportModal(); // Close modal on success
+          }
+
+      } catch (error) {
+          console.error('Report generation failed:', error);
+          // Assuming showToast is defined elsewhere
+          // showToast(`Error: ${error.message}`, 'error');
+      } finally {
+          // Ensure button is re-enabled regardless of outcome
+          if (generateBtn) {
+              generateBtn.disabled = false;
+              // Restore original button content with icon
+              generateBtn.innerHTML = '<i data-lucide="download" class="h-4 w-4"></i> Generate Report';
+              if (typeof lucide !== 'undefined') {
+                lucide.createIcons(); // Re-render the icon
+              }
+          }
+      }
+  }
+
+
+  // --- Consolidated DOMContentLoaded listener ---
+  document.addEventListener('DOMContentLoaded', () => {
+      // --- Initialize Flatpickr Date Pickers FIRST ---
+      try {
+          fpStartDateInstance = flatpickr("#exportStartDate", {
+              dateFormat: "Y-m-d",
+              disableMobile: true, // Recommended for desktop consistency
+              onChange: function(selectedDates, dateStr, instance) {
+                  // When start date changes, set the minimum date for the end date picker
+                  if (fpEndDateInstance && selectedDates[0]) {
+                      fpEndDateInstance.set('minDate', selectedDates[0]);
+                  }
+              }
+          });
+          
+          fpEndDateInstance = flatpickr("#exportEndDate", {
+              dateFormat: "Y-m-d",
+              disableMobile: true, // Recommended for desktop consistency
+              maxDate: "today", // Prevent selecting future dates
+              onChange: function(selectedDates, dateStr, instance) {
+                  // When end date changes, set the maximum date for the start date picker
+                  if (fpStartDateInstance && selectedDates[0]) {
+                      fpStartDateInstance.set('maxDate', selectedDates[0]);
+                  }
+              }
+          });
+          console.log("Flatpickr initialized successfully.");
+      } catch (e) {
+          console.error("Error initializing Flatpickr:", e);
+      }
+
+      // --- Export Report Listeners ---
+      const exportBtn = document.getElementById('exportReportBtn');
+      if (exportBtn) {
+          exportBtn.addEventListener('click', openExportModal);
+      } else {
+          console.error("Export button (#exportReportBtn) not found!");
+      }
+
+      const exportForm = document.getElementById('exportReportForm');
+      if (exportForm) {
+          exportForm.addEventListener('submit', handleReportGeneration);
+      } else {
+           console.error("Export form (#exportReportForm) not found!");
+      }
+
+      // --- Other initializers (Keep relevant ones for the full page context) ---
+      // Example: If dashboard elements exist:
+      const homeElement = document.getElementById('home');
+      if (homeElement && !homeElement.classList.contains('hidden')) {
+          // updateDashboard(); // Call dashboard update if needed
+      }
+      // initializeCalendar(); // Initialize mini calendar if needed
+      // updateClock(); // Set initial clock time if needed
+      // setInterval(updateClock, 1000); // Update clock every second if needed
+      
+      // Add other listeners from your consolidated block if they exist on this page
+      // e.g., Appointments, Login Form, Global Enter Key, etc.
+
+  }); // --- END OF DOMContentLoaded ---
 // <!-- ================================================================== -->
 // <!-- ==================== END  EXPORT REPORT      ===================== -->
 // <!-- ================================================================== -->
@@ -3405,21 +3614,21 @@ async function approveAppointment(id) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Server error:", errorData);
-      alert(`Failed: ${errorData.message || 'Something went wrong.'}`);
+      showToast(`Failed: ${errorData.message || 'Something went wrong.'}`);
       return;
     }
 
     const data = await response.json();
     console.log("✅ Appointment approved:", data);
 
-    alert(`✅ ${data.message}\n📄 PDF: ${data.pdf_url}\n🔗 QR: ${data.qr_url}`);
+    showToast(`✅ ${data.message}\n📄 PDF: ${data.pdf_url}\n🔗 QR: ${data.qr_url}`);
 
     // reload table after approve
     loadAppointments();
 
   } catch (err) {
     console.error("Request failed:", err);
-    alert("❌ Could not connect to server. Please try again.");
+    showToast("❌ Could not connect to server. Please try again.");
   }
 }
 
@@ -3431,7 +3640,7 @@ async function rejectAppointment(id) {
     const j = await res.json().catch(()=>({message:'Failed'}));
     msg = 'Error: ' + (j.message || res.status);
   }
-  alert(msg);
+  showToast(msg);
   loadAppointments();
 }
 
@@ -3624,20 +3833,36 @@ function copyOrderId(orderId, btn) {
 }
 
 // THIS IS YOUR EXISTING TOAST FUNCTION, UNCHANGED
-function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
+// Add this new function near the top of your script
+function showToast(message, type = 'success') {
+    const toastElement = document.getElementById('toast-notification');
+    const toastMessage = document.getElementById('toast-message');
 
-  document.body.appendChild(toast);
+    if (!toastElement || !toastMessage) {
+        console.error('Toast elements not found.');
+        return;
+    }
 
-  setTimeout(() => toast.classList.add("show"), 100);
+    // Set message
+    toastMessage.textContent = message;
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+    // Apply styles based on type
+    if (type === 'error') {
+        toastElement.style.backgroundColor = '#b91c1c'; // Red for error
+    } else {
+        toastElement.style.backgroundColor = '#1f2937'; // Default dark
+    }
+
+    // Show toast
+    toastElement.classList.add('toast-active');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        toastElement.classList.remove('toast-active');
+    }, 3000);
 }
+
+// You can now delete the old "showToast" and "showTrackingToast" functions
 
 // THIS IS YOUR EXISTING UPDATEORDERSTATUS FUNCTION, UNCHANGED
 async function updateOrderStatus(orderId, status) {

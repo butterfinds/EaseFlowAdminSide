@@ -8,45 +8,6 @@ body {
   line-height: 1.6;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  width: 250px;
-  background-color: #3F1A2B;
-  color: #FBF8FB;
-  padding: 20px 0;
-  position: fixed;
-  height: 100vh;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.sidebar h2 {
-  color: #FBB3C8;
-  text-align: center;
-  margin: 0 0 30px 0;
-  padding: 0 20px;
-  font-size: 1.5rem;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar ul li {
-  padding: 12px 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sidebar ul li:hover {
-  background-color: rgba(251, 179, 200, 0.2);
-}
-
 /* Main Content Area */
 .main {
   flex: 1;
@@ -1051,5 +1012,53 @@ td:last-child {
         font-weight: bold;
         font-size: 0.8rem;
     }
+
+    /* --- FONT FIXES END --- */
+
+  /* [NEW] Flatpickr Theme Styles */
+  .flatpickr-calendar {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      font-family: 'Inter', sans-serif;
+  }
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+      background: #EF534F; /* Your main theme color */
+      border-color: #EF534F;
+  }
+  .flatpickr-day:hover {
+      background: #fef2f2; /* Light red hover */
+  }
+  .flatpickr-months .flatpickr-month {
+      color: #1e293b;
+      font-weight: 600;
+  }
+  .flatpickr-current-month .numInputWrapper {
+      color: #1e293b;
+  }
+  .flatpickr-weekdays {
+      background: #f8fafc; /* Light gray for weekday header */
+  }
+  span.flatpickr-weekday {
+      color: #64748b;
+      font-weight: 500;
+  }
+  .flatpickr-day {
+      color: #334155;
+  }
+  .flatpickr-day.disabled {
+      color: #cbd5e1;
+  }
+  .flatpickr-arrow {
+      fill: #64748b;
+  }
+  .flatpickr-arrow:hover {
+      fill: #1e293b;
+  }
+  /* --- END OF Flatpickr Styles --- */
+
 
     /* git add ../src/dashboard.html ../src/style.css */
