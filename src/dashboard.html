@@ -613,6 +613,27 @@
                             <i class="fas fa-plus-circle mr-2"></i> Upload Product
                         </button>
                 </form>
+
+                <hr class="my-8 border-gray-200"> <h3 class="text-xl font-semibold text-gray-900 border-b pb-4 mb-6">Update Payment QR Code</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Upload a new GCash QR code image here. This will replace the current QR code shown on the website's payment page.
+                </p>
+                <form id="qrCodeForm" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">QR Code Image</label>
+                        <div class="file-input-wrapper w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            <input type="file" id="qrCodeInput" accept="image/jpeg,image/png,image/webp" required>
+                            <div class="file-input-button text-gray-500">
+                                <i data-feather="upload" class="w-4 h-4"></i>
+                                <span id="qrFileName">Choose QR Code file (JPG, PNG, WEBP)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="qrUploadButton" class="w-full bg-[#B2183A] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#9e1533] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B2183A] transition-transform transform hover:scale-105">
+                        <i class="fas fa-qrcode mr-2"></i> Upload QR Code
+                    </button>
+                    <p id="qrUploadStatus" class="text-sm text-center mt-2"></p> 
+                  </form>
             </div>
 
             <div class="lg:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
@@ -1697,6 +1718,88 @@ async function deleteProduct(id) {
     showToast('Delete failed: ' + err.message);
   }
 }
+
+// --- QR Code Upload Logic ---
+
+// Add listener to show the chosen QR code file name
+const qrFileInput = document.getElementById('qrCodeInput');
+const qrFileNameSpan = document.getElementById('qrFileName');
+if (qrFileInput && qrFileNameSpan) {
+    qrFileInput.addEventListener('change', function() {
+        if (qrFileInput.files.length > 0) {
+            qrFileNameSpan.textContent = qrFileInput.files[0].name;
+        } else {
+            qrFileNameSpan.textContent = 'Choose QR Code file (JPG, PNG, WEBP)';
+        }
+    });
+}
+
+// Add listener for the QR code form submission
+document.getElementById('qrCodeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const qrInput = document.getElementById('qrCodeInput');
+    const file = qrInput.files[0];
+    const statusEl = document.getElementById('qrUploadStatus');
+    const button = document.getElementById('qrUploadButton');
+
+    if (!file) {
+        statusEl.innerText = 'Please select a QR code image file first.';
+        statusEl.className = 'text-sm text-center mt-2 text-red-600'; // Error color
+        return;
+    }
+
+    // Validate file type (basic client-side check)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        statusEl.innerText = 'Invalid file type. Please upload JPG, PNG, or WEBP.';
+        statusEl.className = 'text-sm text-center mt-2 text-red-600';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('qr_code', file); // Key must match Laravel API validation ('qr_code')
+
+    statusEl.innerText = 'Uploading...';
+    statusEl.className = 'text-sm text-center mt-2 text-gray-600'; // Neutral color
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading...'; // Loading state
+
+    try {
+        const res = await fetch('http://127.0.0.1:8000/api/settings/upload-qr', { // Your Laravel API endpoint
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`, // Use the admin token
+                'Accept': 'application/json' // Important for Laravel to return JSON errors
+            },
+            body: formData
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+            // Use the specific error message from Laravel if available
+            throw new Error(result.message || `Upload failed with status ${res.status}`);
+        }
+
+        statusEl.innerText = 'QR Code updated successfully!';
+        statusEl.className = 'text-sm text-center mt-2 text-green-600'; // Success color
+        e.target.reset(); // Clear the form
+        qrFileNameSpan.textContent = 'Choose QR Code file (JPG, PNG, WEBP)'; // Reset file name display
+
+        // Optionally show a toast notification as well
+        showToast('Payment QR Code updated successfully!', 'success');
+
+    } catch (err) {
+        console.error('QR Upload error:', err);
+        statusEl.innerText = 'Upload failed: ' + err.message;
+        statusEl.className = 'text-sm text-center mt-2 text-red-600'; // Error color
+        showToast('QR Code upload failed: ' + err.message, 'error'); // Show error toast
+    } finally {
+        button.disabled = false; // Re-enable the button
+        // Restore original button content
+        button.innerHTML = '<i class="fas fa-qrcode mr-2"></i> Upload QR Code';
+    }
+});
 
 // SCRIPT TO DISPLAY THE CHOSEN FILE NAME
 const fileInput = document.getElementById('productImage');
