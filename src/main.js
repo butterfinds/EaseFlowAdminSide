@@ -11,6 +11,7 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+      icon: path.join(__dirname, 'assets', 'Easeprint1.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -24,7 +25,7 @@ app.whenReady().then(createWindow);
 // Login handler
 ipcMain.handle('admin-login', async (event, email, password) => {
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/admin/login', {
+    const response = await axios.post('https://easeprintshop.com/api/admin/login', {
       email,
       password,
     });

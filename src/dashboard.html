@@ -1191,7 +1191,7 @@ async function loadSalesHistory() {
     `;
     
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/square/sales', { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch('https://easeprintshop.com/api/square/sales', { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.details || 'Failed to load sales history.');
@@ -1234,7 +1234,7 @@ async function loadInventory() {
     `;
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/square/inventory', { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch('https://easeprintshop.com/api/square/inventory', { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
         
         if (!response.ok) throw new Error(data.error || 'Failed to load inventory data.');
@@ -1281,10 +1281,10 @@ function initializePOS() {
     posProductGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading products...</p>`;
     try {
         const [squareResponse, localResponse] = await Promise.all([
-            fetch('http://127.0.0.1:8000/api/square/products', {
+            fetch('https://easeprintshop.com/api/square/products', {
                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
             }),
-            fetch('http://127.0.0.1:8000/api/admin/products', {
+            fetch('https://easeprintshop.com/api/admin/products', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
@@ -1417,7 +1417,7 @@ function initializePOS() {
         };
 
         try {
-            const squareResponse = await fetch('http://127.0.0.1:8000/api/square/record-sale', {
+            const squareResponse = await fetch('https://easeprintshop.com/api/square/record-sale', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(saleData)
@@ -1429,7 +1429,7 @@ function initializePOS() {
             }
             const squareResult = await squareResponse.json();
 
-            const localStockResponse = await fetch('http://127.0.0.1:8000/api/admin/products/record-sale', {
+            const localStockResponse = await fetch('https://easeprintshop.com/api/admin/products/record-sale', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ items: saleData.items })
@@ -1447,7 +1447,7 @@ function initializePOS() {
                     order_status: 'Successful',
                     payment_status: 'Done'
                 };
-                return fetch('http://127.0.0.1:8000/api/transactions', {
+                return fetch('https://easeprintshop.com/api/transactions', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(transactionData)
@@ -1532,7 +1532,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
   formData.append('category_id', document.getElementById('productCategory').value);
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+    const res = await fetch('https://easeprintshop.com/api/admin/products', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`
@@ -1560,7 +1560,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
 
 // Load categories into the dropdown
 async function loadCategories() {
-  const res = await fetch('http://127.0.0.1:8000/api/categories', {
+  const res = await fetch('https://easeprintshop.com/api/categories', {
     headers: { Authorization: `Bearer ${token}` }
   });
   const categories = await res.json();
@@ -1578,7 +1578,7 @@ loadCategories();
 
 
 async function loadProducts() {
-    const res = await fetch('http://127.0.0.1:8000/api/admin/products', {
+    const res = await fetch('https://easeprintshop.com/api/admin/products', {
         headers: { Authorization: `Bearer ${token}` }
     });
     const products = await res.json();
@@ -1616,7 +1616,7 @@ async function loadProducts() {
 }
 
 function editProduct(id) {
-    fetch('http://127.0.0.1:8000/api/admin/products', {
+    fetch('https://easeprintshop.com/api/admin/products', {
         headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => res.json())
@@ -1666,7 +1666,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     formData.append('_method', 'PUT');
 
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+        const res = await fetch(`https://easeprintshop.com/api/admin/products/${id}`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -1697,7 +1697,7 @@ async function deleteProduct(id) {
   if (!confirm('Are you sure you want to delete this product?')) return;
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+    const res = await fetch(`https://easeprintshop.com/api/admin/products/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -1766,7 +1766,7 @@ document.getElementById('qrCodeForm').addEventListener('submit', async (e) => {
     button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading...'; // Loading state
 
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/settings/upload-qr', { // Your Laravel API endpoint
+        const res = await fetch('https://easeprintshop.com/api/settings/upload-qr', { // Your Laravel API endpoint
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`, // Use the admin token
@@ -1829,7 +1829,7 @@ const hasNewMessageMap = {};
 let selectedCustomerId = null;
 
 async function loadCustomers() {
-  const res = await fetch('http://127.0.0.1:8000/api/customers');
+  const res = await fetch('https://easeprintshop.com/api/customers');
   const customers = await res.json();
   const select = document.getElementById('customerSelect');
 
@@ -1860,7 +1860,7 @@ function escapeHtml(str) {
 
 async function loadCustomers() {
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/customers');
+    const res = await fetch('https://easeprintshop.com/api/customers');
     const customers = await res.json();
 
     const list = document.getElementById('customerList');
@@ -1982,7 +1982,7 @@ async function hasUnread(customerId) {
   }
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/messages/${customerId}`);
+    const res = await fetch(`https://easeprintshop.com/api/messages/${customerId}`);
     const messages = await res.json();
     if (messages.length === 0) return false;
 
@@ -2017,7 +2017,7 @@ let lastFetchedMessageId = 0;
 async function fetchMessages() {
   if (!selectedCustomerId) return;
 
-  const res = await fetch(`http://127.0.0.1:8000/api/messages/${selectedCustomerId}`);
+  const res = await fetch(`https://easeprintshop.com/api/messages/${selectedCustomerId}`);
   const messages = await res.json();
   const chatBox = document.getElementById('chatBox');
 
@@ -2072,7 +2072,7 @@ async function fetchMessages() {
 
 
 function markMessagesRead(customerId) {
-  fetch(`http://127.0.0.1:8000/api/messages/${customerId}`)
+  fetch(`https://easeprintshop.com/api/messages/${customerId}`)
     .then(res => res.json())
     .then(messages => {
       if (messages.length === 0) return;
@@ -2089,7 +2089,7 @@ async function sendMessage() {
   const msg = document.getElementById('chatInput').value;
   if (!selectedCustomerId || !msg.trim()) return;
 
-  await fetch('http://127.0.0.1:8000/api/messages', {
+  await fetch('https://easeprintshop.com/api/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -2124,12 +2124,12 @@ function notifyNewMessage(msg) {
 let lastFetchedMessageIdMap = {}; // per customer
 
 async function checkAllCustomersForNewMessages() {
-  const res = await fetch('http://127.0.0.1:8000/api/customers');
+  const res = await fetch('https://easeprintshop.com/api/customers');
   const customers = await res.json();
 
   for (const customer of customers) {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/messages/${customer.id}`);
+      const res = await fetch(`https://easeprintshop.com/api/messages/${customer.id}`);
       const messages = await res.json();
 
       if (messages.length === 0) continue;
@@ -2175,7 +2175,7 @@ let categoryMap = new Map();
 
 // Fetch transactions list
 async function fetchTransactions() {
-  const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+  const res = await fetch('https://easeprintshop.com/api/transactions', {
     headers: { Authorization: `Bearer ${token}` }
   });
   const transactions = await res.json();
@@ -2230,7 +2230,7 @@ async function submitTransaction() {
   const responseDiv = document.getElementById("response");
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/transactions', {
+    const res = await fetch('https://easeprintshop.com/api/transactions', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2296,7 +2296,7 @@ async function saveEdit() {
   const paymentStatus = document.getElementById('editPaymentStatus').value;
 
   try {
-    await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+    await fetch(`https://easeprintshop.com/api/transactions/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -2323,7 +2323,7 @@ async function deleteTransaction(id) {
   if (!confirm("Are you sure you want to delete this transaction?")) return;
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/transactions/${id}`, {
+    const res = await fetch(`https://easeprintshop.com/api/transactions/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -2344,7 +2344,7 @@ async function deleteTransaction(id) {
 
 // Load categories for transaction dropdown
 async function loadCategoriesForTransactions() {
-  const res = await fetch('http://127.0.0.1:8000/api/categories', {
+  const res = await fetch('https://easeprintshop.com/api/categories', {
     headers: { Authorization: `Bearer ${token}` }
   });
   const categories = await res.json();
@@ -2389,10 +2389,10 @@ async function updateDashboard() {
 
     try {
         const [ordersResponse, appointmentsResponse, summaryResponse, topProductsResponse] = await Promise.all([
-            fetch('http://127.0.0.1:8000/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('http://127.0.0.1:8000/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('http://127.0.0.1:8000/api/reports/dashboard-summary', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('http://127.0.0.1:8000/api/reports/top-products', { headers: { Authorization: `Bearer ${token}` } })
+            fetch('https://easeprintshop.com/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('https://easeprintshop.com/api/appointments', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('https://easeprintshop.com/api/reports/dashboard-summary', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('https://easeprintshop.com/api/reports/top-products', { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
         if (!summaryResponse.ok) {
@@ -3133,7 +3133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
       try {
-          const apiUrl = `http://127.0.0.1:8000/api/reports/export-sales?type=${reportType}&start_date=${startDate}&end_date=${endDate}`;
+          const apiUrl = `https://easeprintshop.com/api/reports/export-sales?type=${reportType}&start_date=${startDate}&end_date=${endDate}`;
 
           // Ensure token is defined and accessible (assuming it's globally available as 'token')
           if (typeof token === 'undefined' || !token) {
@@ -3439,9 +3439,9 @@ async function updateAnalyticsData() {
             earningsBreakdownRes,
             salesByCategoryRes
         ] = await Promise.all([
-            fetch(`http://127.0.0.1:8000/api/reports/sales-trends?period=${period}`, { headers: apiHeaders }),
-            fetch('http://127.0.0.1:8000/api/reports/earnings-breakdown', { headers: apiHeaders }),
-            fetch('http://127.0.0.1:8000/api/reports/sales-by-category', { headers: apiHeaders })
+            fetch(`https://easeprintshop.com/api/reports/sales-trends?period=${period}`, { headers: apiHeaders }),
+            fetch('https://easeprintshop.com/api/reports/earnings-breakdown', { headers: apiHeaders }),
+            fetch('https://easeprintshop.com/api/reports/sales-by-category', { headers: apiHeaders })
         ]);
 
         // Check responses
@@ -3530,7 +3530,7 @@ async function updateAnalyticsData() {
 // <!-- ================================================================== -->
 
 
-  const API_URL = "http://localhost:8000/api/custom-shirts"; // Laravel API
+  const API_URL = "https://easeprintshop.com/api/custom-shirts"; // Laravel API
 
     async function fetchRequests() {
       try {
@@ -3584,7 +3584,7 @@ async function updateAnalyticsData() {
                 </td>
                 <td class="px-6 py-6 whitespace-nowrap">
                     <div class="flex items-center text-sm">
-                        ${req.design ? `<a href="http://localhost:8000/storage/${req.design}" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><i data-feather="eye" class="w-4 h-4"></i> View</a>` : '<span>No Design</span>'}
+                        ${req.design ? `<a href="https://easeprintshop.com/storage/${req.design}" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><i data-feather="eye" class="w-4 h-4"></i> View</a>` : '<span>No Design</span>'}
                         <span class="mx-2 text-gray-300">|</span>
                         <div>Size: <span class="font-semibold">${req.size}</span></div>
                         <span class="mx-2 text-gray-300">|</span>
@@ -3632,7 +3632,7 @@ async function updateAnalyticsData() {
 
 
 
-  const API_BASE = 'http://localhost:8000/api';
+  const API_BASE = 'https://easeprintshop.com/api';
 
 const appointmentsTbody = document.querySelector('#appointmentsTbl tbody');
 const appointmentsStatusFilter = document.getElementById('appointmentsStatusFilter');
@@ -3706,7 +3706,7 @@ async function loadAppointments() {
 
 async function approveAppointment(id) {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/appointments/${id}/approve`, {
+    const response = await fetch(`https://easeprintshop.com/api/appointments/${id}/approve`, {
       method: 'PUT',   // ✅ match Laravel route
       headers: {
         'Content-Type': 'application/json',
@@ -3759,7 +3759,7 @@ async function fetchOrders() {
 
     try {
         const token = localStorage.getItem('adminToken');
-        const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
+        const response = await fetch('https://easeprintshop.com/api/admin/orders', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -3836,7 +3836,7 @@ async function fetchOrders() {
             let paymentProofHtml = '<span class="text-gray-400">N/A</span>';
             if (order.payment_screenshot_path) {
                 // Assuming your Laravel backend serves storage files correctly via the symlink
-                const screenshotUrl = `http://127.0.0.1:8000/storage/${order.payment_screenshot_path}`;
+                const screenshotUrl = `https://easeprintshop.com/storage/${order.payment_screenshot_path}`;
                  paymentProofHtml = `
                     <a href="${screenshotUrl}" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                         <i data-feather="image" class="w-4 h-4"></i> View
@@ -3971,7 +3971,7 @@ function showToast(message, type = 'success') {
 async function updateOrderStatus(orderId, status) {
   try {
     const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}/status`, {
+    const response = await fetch(`https://easeprintshop.com/api/admin/orders/${orderId}/status`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -4041,7 +4041,7 @@ async function deleteOrder(orderId) {
 
   try {
     const token = localStorage.getItem('adminToken'); 
-    const response = await fetch(`http://127.0.0.1:8000/api/admin/orders/${orderId}`, {
+    const response = await fetch(`https://easeprintshop.com/api/admin/orders/${orderId}`, {
       method: 'DELETE',
       headers: { 
         'Content-Type': 'application/json',
@@ -4249,7 +4249,7 @@ async function initializeTracking() {
     const updateOrderStatusAPI = async (orderDbId, newStage) => {
         console.log(`🚀 API Request: Updating order ${orderDbId} to "${newStage}"...`);
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/tracking/orders/${orderDbId}/tracking-stage`, {
+            const res = await fetch(`https://easeprintshop.com/api/tracking/orders/${orderDbId}/tracking-stage`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -4343,7 +4343,7 @@ async function initializeTracking() {
 
     // --- INITIALIZATION ---
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
+        const response = await fetch('https://easeprintshop.com/api/admin/orders', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(!response.ok) throw new Error('Failed to fetch orders for tracking.');
