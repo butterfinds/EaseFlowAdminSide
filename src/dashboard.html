@@ -1191,7 +1191,7 @@ async function loadSalesHistory() {
     `;
     
     try {
-        const response = await fetch('https://easeprintshop.com/api/square/sales', { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch('https://easeprintshop.com/api/sales-history/all', { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.details || 'Failed to load sales history.');
